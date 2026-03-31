@@ -1,8 +1,9 @@
 FROM python:3.14-slim-trixie
 
-# Install ca-certificates
+# Install ca-certificates, libicu (required by spire.doc/.NET runtime),
+# and libfontconfig1/libfreetype6 (required by SkiaSharp for image rendering)
 RUN apt-get update && \
- apt-get install -y ca-certificates
+ apt-get install -y ca-certificates libicu-dev libfontconfig1 libfreetype6
 
  # Copy Zscaler root certificate if it exists (for corporate networks)
 COPY zscaler-root-ca.crt* /usr/local/share/ca-certificates/zscaler-root-ca.crt
@@ -29,5 +30,7 @@ ADD . /app
 WORKDIR /app
 RUN uv sync
 
-# Presuming there is a `main.py` command provided by the project
+# Run document cleanup
+RUN uv run document_cleanup.py
+# Run MCP server
 CMD ["uv", "run", "main.py"]
