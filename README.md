@@ -19,6 +19,7 @@ This MCP server is built with [FastMCP](https://gofastmcp.com) and containerized
 ## Tools
 
 ### 1. `get_doc_ids`
+
 Get a list of all document IDs available in the document library.
 
 **Parameters:** None
@@ -26,31 +27,37 @@ Get a list of all document IDs available in the document library.
 **Returns:** List of document ID strings for all `.docx` files in the document library
 
 **Example usage in Copilot Chat:**
-```
+
+```text
 What ECSS documents are available in the ecss-mcp-server?
 ```
 
 ### 2. `get_doc_summary`
+
 Get a summary of a document including its scope and table of contents.
 
 **Integration pattern:** Call `get_doc_ids` first to find valid document IDs before using this tool.
 
 **Parameters:**
+
 - `doc_id` (string): The ECSS document ID (e.g. `ECSS-E-ST-32`)
 
 **Returns:** String containing the document scope, table of contents (section numbers and headings), and list of figures and tables
 
 **Example usage in Copilot Chat:**
-```
+
+```text
 Give me a summary of ECSS-E-ST-32 using the ecss-mcp-server.
 ```
 
 ### 3. `get_section_text`
+
 Extract the full text of a specific section from a document.
 
 **Integration pattern:** Call `get_doc_summary` first to get the table of contents, then use section numbers and headings exactly as they appear there.
 
 **Parameters:**
+
 - `doc_id` (string): The ECSS document ID (e.g. `ECSS-E-ST-32`)
 - `section` (string): The section number as it appears in the table of contents (e.g. `"5.5.3"`)
 - `heading` (string): The section heading as it appears in the table of contents (e.g. `"Thermal Analysis"`)
@@ -58,7 +65,8 @@ Extract the full text of a specific section from a document.
 **Returns:** String containing all paragraph text in the specified section
 
 **Example usage in Copilot Chat:**
-```
+
+```text
 Get the requirements from section 5.3 of ECSS-E-ST-32 using the ecss-mcp-server.
 ```
 
@@ -102,6 +110,7 @@ docker build -t ecss-mcp-server .
 ```
 
 This command:
+
 - Downloads Python 3.14 base image
 - Installs required dependencies using UV package manager
 - Configures Docker for Zscaler
@@ -118,6 +127,7 @@ docker run -it --name test ecss-mcp-server
 You should see the FastMCP startup banner:
 
 Stop the test container and clean up:
+
 ```bash
 docker stop test
 docker rm test
@@ -133,9 +143,11 @@ This MCP server works with any MCP-compatible client that supports stdio transpo
 2. Type and select **"MCP: Add Server"**
 3. Choose **"Command (stdio)"** as the transport type
 4. Enter the Docker command:
-   ```
+
+   ```bash
    docker run --rm -i --network host ecss-mcp-server
    ```
+
 5. Name the server: `ecss-mcp-server`
 6. The server will be automatically added to your MCP configuration
 
@@ -188,13 +200,15 @@ Add the following configuration:
 ## Development & Contributing
 
 Interested in contributing to this project? Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Development setup instructions
 - Testing procedures
 - Code guidelines
 - How to submit changes
 
 ### Project Structure
-```
+
+```text
 ecss-mcp-server/
 ├── main.py                       # FastMCP server with ECSS tools
 ├── document_cleanup.py           # Converts .doc to .docx and simplifies filenames at build time
@@ -214,6 +228,7 @@ ecss-mcp-server/
 ### Container Issues
 
 **Container fails to start:**
+
 - Verify Docker is running: `docker --version`
 - Check image exists: `docker images | grep ecss-mcp-server`
 - Review build logs for errors during image creation
@@ -222,6 +237,7 @@ ecss-mcp-server/
 ### VS Code Integration Issues
 
 **VS Code doesn't detect the server:**
+
 - Confirm `mcp.json` configuration syntax is valid JSON
 - Verify file location: `%APPDATA%\Code\User\mcp.json` (Windows)
 - Restart VS Code after configuration changes
@@ -229,6 +245,7 @@ ecss-mcp-server/
 - Ensure Docker Desktop is running before starting VS Code
 
 **Server appears but tools don't work:**
+
 - Rebuild the Docker image to ensure latest code
 - Check that FastMCP banner shows on startup
 - Test tools manually: `docker run -it --name test ecss-mcp-server`
@@ -236,6 +253,7 @@ ecss-mcp-server/
 ## Technical Details
 
 ### Dependencies
+
 - **Python**: 3.14 (slim-trixie base image)
 - **FastMCP**: ≥3.1.1 (MCP protocol implementation)
 - **python-docx**: ≥1.2.0 (reading `.docx` document content)
@@ -248,9 +266,9 @@ For detailed security information, including vulnerability reporting, and privac
 
 ## Support & Resources
 
-- **FastMCP Documentation**: https://gofastmcp.com
-- **MCP Protocol Specification**: https://modelcontextprotocol.io
-- **Docker Documentation**: https://docs.docker.com
+- **FastMCP Documentation**: <https://gofastmcp.com>
+- **MCP Protocol Specification**: <https://modelcontextprotocol.io>
+- **Docker Documentation**: <https://docs.docker.com>
 
 ## Project Documentation
 
