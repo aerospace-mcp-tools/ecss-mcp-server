@@ -43,7 +43,7 @@ def extract_toc(document) -> list:
 
     # Table of Contents
     TOC_STYLES = {'toc 1', 'toc 2', 'toc 3'}
-    toc_paragraphs = [p for p in document.paragraphs if p.style.name in TOC_STYLES]
+    toc_paragraphs = [p for p in document.paragraphs if p.style.name.lower() in TOC_STYLES]
 
     tocs = []   
     
@@ -75,9 +75,9 @@ def extract_toc(document) -> list:
         tocs.append(toc_entry)
         
     # Find heading paragraphs that match the table of contents by iterating through all headings
-    HEADING_STYLES = {'Heading 0', 'Heading 1', 'Heading 2', 'Heading 3', 'Heading 4', 'Heading 5'}
+    HEADING_STYLES = {'heading 0', 'heading 1', 'heading 2', 'heading 3', 'heading 4', 'heading 5'}
     for i, p in enumerate(document.paragraphs):
-        if p.style.name in HEADING_STYLES:
+        if p.style.name.lower() in HEADING_STYLES:
             heading_text = p.text.strip()
             # Match the heading text with the next unmatched ToC entry
             for toc in tocs:
@@ -98,7 +98,7 @@ def extract_fots(document) -> list:
     """
     # List of figures and tables
     LIST_STYLES = {'table of figures'}
-    list_paragraphs = [p for p in document.paragraphs if p.style.name in LIST_STYLES]
+    list_paragraphs = [p for p in document.paragraphs if p.style.name.lower() in LIST_STYLES]
 
     # Defne classes for figures and tables
     class fot: 
