@@ -209,3 +209,27 @@ __marimo__/
 # Documents
 documents/
 .venv/
+
+# Local GitHub Actions tool (ACT)
+.actrc
+
+# coverage
+cov.xml
+
+# Editor config files
+.vscode
+
+# DeepCode/Snyk
+.dccache
+
+# Tox stuff
+tests/reports
+
+# Makefile installation stamp
+.install.stamp
+
+# Ruff
+.ruff_cache
+
+# Logs
+logs/
