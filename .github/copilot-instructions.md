@@ -4,36 +4,43 @@ FastMCP-based MCP server that provides agentic access to ECSS (European Cooperat
 
 ## Architecture
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `main.py` | FastMCP server — defines the three MCP tools |
+| `src/ecss_mcp/main.py` | FastMCP server — defines the three MCP tools (`get_doc_ids`, `get_doc_summary`, `get_section_text`) |
+| `doc_processing.py` | Shared document-processing helpers (ToC extraction, section extraction) used locally and in tests |
 | `document_cleanup.py` | Build-time script: converts `.doc` → `.docx`, simplifies filenames to ECSS IDs |
 | `documents/` | Place `.doc`/`.docx` ECSS standards files here before building |
 | `Dockerfile` | Builds image with Python 3.14, installs deps via UV, runs cleanup, starts server |
-| `pyproject.toml` | UV-managed project manifest |
+| `pyproject.toml` | UV-managed project manifest; also configures ruff, pytest, mypy, tox |
 
 ## Build & Test
 
 ```bash
-# Build image (runs document_cleanup.py automatically)
-docker build -t ecss-mcp-server .
+# Local dev (no Docker needed)
+make install        # uv sync + stamps deps
+make lint           # ruff + mypy
+make test           # uv run pytest (configured in pyproject.toml)
+make all            # install + lint + test
 
-# Smoke-test: verify FastMCP banner shows all tools
-docker run -it --name test ecss-mcp-server
+# Docker build and smoke-test
+docker build -t ecss-mcp-server .
+docker run -it --name test ecss-mcp-server   # verify tool count in banner
 docker stop test && docker rm test
 
-# Restart VS Code to reload MCP client after changes
+# After rebuilding the image, restart VS Code to reload the MCP client
 ```
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for full dev setup and testing procedure.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for full dev setup details.
 
 ## Conventions
 
-- **Adding tools**: Use FastMCP decorator pattern from existing tools in `main.py`. No new files needed for new tools.
+- **Adding tools**: Use the `@app.tool()` FastMCP decorator in `src/ecss_mcp/main.py`. No new files needed for new tools.
 - **Document path inside container**: `/app/documents/{doc_id}.docx`
 - **ECSS document ID format**: `ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?` (e.g. `ECSS-E-ST-32C`) or `ECSS-[A-Z]-[A-Z]{2}-\d{2}-\d{2}[A-Z]?` for sub-numbered docs. The `document_cleanup.py` regex handles both patterns.
 - **Agentic tool call order**: `get_doc_ids` → `get_doc_summary` → `get_section_text`. Always call `get_doc_summary` before `get_section_text` to obtain valid section numbers and headings.
 - **Package manager**: UV (`uv sync`, `uv run`). Do not use `pip` directly.
+- **Linter**: Ruff with `lint.select = ["ALL"]`; line length 120. Run `uv run ruff . --fix`.
+- **Searching ECSS documents**: Use the `searching-ecss` skill (`.github/skills/searching-ecss/SKILL.md`) for structured document research workflows.
 
 ## Pitfalls
 

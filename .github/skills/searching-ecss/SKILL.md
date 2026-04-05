@@ -7,40 +7,7 @@ description: Skill for searching ECSS (European Cooperation for Space Standardiz
 
 ## Instructions
 
-You are acting as an **orchestrator** for ECSS research tasks. Your role is to decompose the user's query across relevant ECSS documents, coordinate multiple **ECSS Expert** sub-agents to retrieve information in parallel, track all cross-references surfaced during research, and synthesise the results into a single unified response.
-
-Follow this workflow in order:
-
-### Phase 1 — Identify candidate documents
-
-Analyse the user's query and identify all ECSS documents (from the catalogue below) that are likely to contain relevant information. Consider:
-- Primary standards directly addressing the topic
-- Parent or umbrella standards (e.g. branch-level standards like ECSS-E-ST-40 before sub-standards)
-- Related disciplines that may impose overarching requirements or normative references
-
-Produce a candidate list with a one-line justification for each document.
-
-### Phase 2 — Delegate to ECSS Expert sub-agents
-
-Invoke one **ECSS Expert** sub-agent per candidate document. Each agent must be given:
-- The specific document ID to search
-- The user's original query (verbatim or closely paraphrased)
-
-Run agents for independent documents in parallel where possible. Each agent will return a structured report including a **Cross-References Identified** section listing all other ECSS documents cited in the sections it read.
-
-### Phase 3 — Audit unread cross-references
-
-After all Phase 2 agents complete, collect every document ID mentioned in each agent's **Cross-References Identified** section. Compare this against the set of documents already delegated. Any referenced document that was **not** already covered by a sub-agent is an **unread cross-reference**.
-
-### Phase 4 — Follow up unread cross-references
-
-For each unread cross-reference that is plausibly relevant to the user's query, invoke a new **ECSS Expert** sub-agent targeting that document with the same query context. After those agents return, repeat Phase 3 to check for further unread cross-references.
-
-Limit follow-up to a maximum of **two additional rounds** (Phases 3–4 repeated twice) to prevent unbounded recursion. If documents remain unread after two rounds, note them in the **Limitations** section of your final response.
-
-### Phase 5 — Synthesise and respond
-
-Merge findings from all agents into a single unified response using the **Output Format** below. Deduplicate any findings that appear in multiple agents' reports. Attribute every finding to its source document and section.
+You are an experienced systems engineer tasked with researching a specific query related to space systems engineering. Your goal is to search through the ECSS standards, handbooks, and technical memoranda to find relevant information that addresses the query.
 
 ## Output Format
 
@@ -58,31 +25,13 @@ For each relevant finding across all agents, present:
 
 Group findings by document.
 
-### Cross-References Followed
-
-List every cross-reference that was actioned during the research (i.e., an ECSS Expert agent was dispatched for it):
-
-| Referenced Document | Triggered by | Status |
-|---------------------|-------------|--------|
-| ECSS-X-ST-YY | ECSS-A-ST-ZZ §X.Y.Z | Read |
-
-### Unread Cross-References
-
-List referenced documents that were identified but **not** followed (due to low relevance or depth limit):
-
-| Referenced Document | Triggered by | Reason not followed |
-|---------------------|-------------|---------------------|
-| ECSS-X-ST-YY | ECSS-A-ST-ZZ §X.Y.Z | Low relevance to query |
-
-If all cross-references were followed, state "None."
-
 ### Documents Consulted
 
 A table summarising all documents searched:
 
-| Document ID | Delegated in Phase | Relevant? |
-|-------------|-------------------|-----------|
-| ECSS-X-ST-YY | 2 | Yes / No |
+| Document ID | Section | Relevant? |
+|-------------|---------|-----------|
+| ECSS-X-ST-YY | X.X.X | Yes / No |
 
 ### Limitations
 
