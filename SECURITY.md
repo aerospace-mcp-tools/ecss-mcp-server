@@ -14,16 +14,19 @@ As a small, single-developer project, only the latest release on the `main` bran
 **For security issues, please do NOT open a public GitHub issue.**
 
 Instead:
+
 1. Open a [Security Advisory](https://github.com/aerospace-mcp-tools/ecss-mcp-server/security/advisories/new) on GitHub, or
 2. Contact the maintainer through GitHub's private messaging
 
 **What to include:**
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
 - Any suggested fixes (optional)
 
 **Response timeline:**
+
 - Initial response: Within 1 week
 - Fix timeline: Depends on severity and complexity
 
@@ -50,6 +53,7 @@ This container is configured to work with Zscaler. This is done by installing yo
 ### Dependencies
 
 Dependencies are managed via `uv` and pinned in `uv.lock`:
+
 - `fastmcp`: MCP server framework
 - `pandas`: Data manipulation
 - `python-docx`: Reading word documents
@@ -61,4 +65,4 @@ Security patches will be applied to the `main` branch as needed. Watch the repos
 
 ---
 
-*Last updated: April 01, 2026*
+Last updated: April 01, 2026

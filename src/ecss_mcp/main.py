@@ -268,5 +268,9 @@ def get_section_text(doc_id: str, section: str, heading: str) -> str:
     doc = load_document(doc_id)
     return extract_section(doc, section, heading)
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for the ecss-mcp-server script."""
     app.run()
+
+if __name__ == "__main__":
+    main()

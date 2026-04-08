@@ -1,8 +1,6 @@
 # Inspired by:
 # https://blog.mathieu-leplatre.info/tips-for-your-makefile-with-python.html
 
-PYMODULE := ecss_mcp
-TESTS := tests
 INSTALL_STAMP := .install.stamp
 UV := $(shell command -v uv 2> /dev/null)
 MYPY := $(shell command -v mypy 2> /dev/null)
@@ -35,11 +33,7 @@ $(INSTALL_STAMP): pyproject.toml
 .PHONY: lint
 lint: $(INSTALL_STAMP)
 	# Configured in pyproject.toml
-	# Skips mypy if not installed
-	#
-	# $(UV) run black --check $(TESTS) $(PYMODULE) --diff
-	@if [ -z $(MYPY) ]; then echo "Mypy not found, skipping..."; else echo "Running Mypy..."; $(UV) run mypy $(PYMODULE) $(TESTS); fi
-	@echo "Running Ruff..."; $(UV) run ruff . --fix
+	@echo "Running Ruff..."; $(UV) run ruff check --fix
 
 .PHONY: test
 test: $(INSTALL_STAMP)

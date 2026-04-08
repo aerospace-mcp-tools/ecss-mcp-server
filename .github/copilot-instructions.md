@@ -6,9 +6,8 @@ FastMCP-based MCP server that provides agentic access to ECSS (European Cooperat
 
 | Path | Purpose |
 |------|---------|
-| `src/ecss_mcp/main.py` | FastMCP server — defines the three MCP tools (`get_doc_ids`, `get_doc_summary`, `get_section_text`) |
-| `doc_processing.py` | Shared document-processing helpers (ToC extraction, section extraction) used locally and in tests |
-| `document_cleanup.py` | Build-time script: converts `.doc` → `.docx`, simplifies filenames to ECSS IDs |
+| `src/ecss_mcp/main.py` | FastMCP server — defines the three MCP tools (`get_doc_ids`, `get_doc_summary`, `get_section_text`) plus inline document-processing helpers (ToC extraction, section extraction) |
+| `src/ecss_parser/main.py` | Build-time script: converts `.doc` → `.docx`, simplifies filenames to ECSS IDs (entry point: `ecss-parser`) |
 | `documents/` | Place `.doc`/`.docx` ECSS standards files here before building |
 | `Dockerfile` | Builds image with Python 3.14, installs deps via UV, runs cleanup, starts server |
 | `pyproject.toml` | UV-managed project manifest; also configures ruff, pytest, mypy, tox |
@@ -36,7 +35,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for full dev setup details.
 
 - **Adding tools**: Use the `@app.tool()` FastMCP decorator in `src/ecss_mcp/main.py`. No new files needed for new tools.
 - **Document path inside container**: `/app/documents/{doc_id}.docx`
-- **ECSS document ID format**: `ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?` (e.g. `ECSS-E-ST-32C`) or `ECSS-[A-Z]-[A-Z]{2}-\d{2}-\d{2}[A-Z]?` for sub-numbered docs. The `document_cleanup.py` regex handles both patterns.
+- **ECSS document ID format**: `ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?` (e.g. `ECSS-E-ST-32C`) or `ECSS-[A-Z]-[A-Z]{2}-\d{2}-\d{2}[A-Z]?` for sub-numbered docs. The `src/ecss_parser/main.py` regex handles both patterns.
 - **Agentic tool call order**: `get_doc_ids` → `get_doc_summary` → `get_section_text`. Always call `get_doc_summary` before `get_section_text` to obtain valid section numbers and headings.
 - **Package manager**: UV (`uv sync`, `uv run`). Do not use `pip` directly.
 - **Linter**: Ruff with `lint.select = ["ALL"]`; line length 120. Run `uv run ruff . --fix`.

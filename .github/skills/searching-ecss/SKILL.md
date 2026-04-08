@@ -248,6 +248,8 @@ Note any gaps: documents unavailable, depth limit reached, or aspects of the que
 
 ### Space engineering branch HBs and TMs
 
+Handbooks and technical manuals provide detailed guidance and best practices for specific topics within the space engineering discipline. They are intended to support the implementation of the requirements defined in the ECSS standards.
+
 - **E-10 discipline** - System engineering
   - **ECSS-E-HB-10-02** - Verification guidelines
   - **ECSS-E-HB-10-03** - Testing guidelines

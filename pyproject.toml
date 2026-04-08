@@ -27,10 +27,10 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/aerospace-mcp-tools/ecss-mcp-server"
 Repository = "https://github.com/aerospace-mcp-tools/ecss-mcp-server"
-Documentation = "https://github.com/aerospace-mcp-tools/ecss-mcp-server/tree/main/docs"
 
 [project.scripts]
 ecss-mcp-server = "ecss_mcp.main:main"
+ecss-parser = "ecss_parser.main:main"
 
 [dependency-groups]
 dev = [
@@ -38,8 +38,6 @@ dev = [
     "pytest>=8.4.0",
     "pytest-cov>=6.0.0",
     "ruff>=0.11.0",
-    "tox>=4.23.0",
-    "tox-gh-actions>=3.4.0",
 ]
 
 [tool.coverage.report]
@@ -55,9 +53,6 @@ omit = [
     ".tox/*",
     "tests/*",
 ]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/ecss_mcp"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -111,33 +106,15 @@ max-statements = 80
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-env_list = py314
-skip_missing_interpreters = true
-
-[gh-actions]
-python =
-    3.14: py314
-
-[testenv]
-pass_env =
-    GITHUB_*
-    FORCE_COLOR
-allowlist_externals = uv
-
-commands =
-    uv run --active --frozen pytest
-    uv run --active --frozen coverage report
-"""
-
 [tool.uv]
 cache-keys = [
     { file = "pyproject.toml" },
     { git = { commit = true, tags = true } },
 ]
 
+[tool.uv.build-backend]
+module-name = ["ecss_mcp", "ecss_parser"]
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.11.5,<0.12"]
+build-backend = "uv_build"

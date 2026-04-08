@@ -10,7 +10,6 @@ from spire.doc import Document, FileFormat
 
 logger = logging.getLogger(__name__)
 
-
 # Convert from .doc to .docx format
 def convert_doc_to_docx(doc_file: Path, docx_file: Path) -> None:
     """

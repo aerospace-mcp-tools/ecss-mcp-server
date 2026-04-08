@@ -1,4 +1,4 @@
-"""ecss_mcp: MCP server for ECSS standards documents."""
+"""ecss_parser: Python module for parsing ECSS standards documents."""
 
 import importlib.metadata
 
