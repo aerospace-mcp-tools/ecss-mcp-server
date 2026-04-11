@@ -3,27 +3,46 @@
 # Import Python libraries
 from pathlib import Path
 
+import docx.document
+
 # Import third-party libraries
 from docx import Document
 
 # Define classes
+
 class TocEntry:
+    """Class for table of contents entries."""
+
     def __init__(self) -> None:
+        """Initialize an empty ToC entry."""
         self.section = None  # Section number
         self.heading = None  # Heading text
         self.page = None  # Page number
         self.paragraph_i = None  # Paragraph index
 
-# Define classes for figures and tables
 class Fot:
+    """Class for List of Figures or Tables entries."""
+
     def __init__(self, element: str, number: str, text: str, page: str) -> None:
+        """Initialize a List of Figures or Tables entry."""
         self.element = element
         self.number = number
         self.text = text
         self.page = page
 
+# Get list of document IDs from the document library
+def get_doc_ids() -> list[str]:
+    """
+    Get a list of document IDs from the document library.
+
+    Returns:
+        list[str]: A list of all document IDs in the document library.
+
+    """
+    return [doc_file.stem for doc_file in Path("/app/documents").glob("*.docx")]
+
 # Load document from document library using document ID
-def load_document(doc_id: str) -> Document:
+def load_document(doc_id: str) -> docx.document.Document:
     """
     Load a document from the document library using its document ID.
 
@@ -31,7 +50,7 @@ def load_document(doc_id: str) -> Document:
         doc_id (str): The document ID of the document to load.
 
     Returns:
-        Document: The loaded document object.
+        docx.document.Document: The loaded document object.
 
     """
     doc_path = Path(f"/app/documents/{doc_id}.docx")
@@ -41,19 +60,18 @@ def load_document(doc_id: str) -> Document:
     return Document(str(doc_path))
 
 # Extract the Table of Contents from the document
-def extract_toc(document: Document) -> list[TocEntry]:  # noqa: C901
+def extract_toc(document: docx.document.Document) -> list[TocEntry]:
     """
     Extract the Table of Contents from a document.
 
     Args:
-        document (Document): The document object to extract the ToC from.
+        document (docx.document.Document): The document object to extract the ToC from.
 
     Returns:
         list: A list of table of contents entries, each containing the section number,
             heading text, page number and paragraph index.
 
     """
-
     # Table of Contents
     toc_styles = {'toc 1', 'toc 2', 'toc 3'}
     toc_paragraphs = [p for p in document.paragraphs if p.style.name.lower() in toc_styles]
@@ -100,12 +118,12 @@ def extract_toc(document: Document) -> list[TocEntry]:  # noqa: C901
     return tocs
 
 # Extract the List of Figures or Tables from the document
-def extract_fots(document: Document) -> list[Fot]:
+def extract_fots(document: docx.document.Document) -> list[Fot]:
     """
     Extract the List of Figures or Tables from a document.
 
     Args:
-        document (Document): The document object to extract the List of Figures or Tables from.
+        document (docx.document.Document): The document object to extract the List of Figures or Tables from.
 
     Returns:
         list: A list of figures or tables, each containing the type (figure or table), number, text, and page number.
@@ -159,12 +177,12 @@ def extract_fots(document: Document) -> list[Fot]:
         fots.append(fot_entry)
     return fots
 
-def extract_section(document: Document, section: str, heading: str) -> str:
+def extract_section(document: docx.document.Document, section: str, heading: str) -> str:
     """
     Extract the text of a specific section from a document.
 
     Args:
-        document (Document): The document object to extract the section from.
+        document (docx.document.Document): The document object to extract the section from.
         section (str): The section to extract as taken from table of contents (i.e. 1.2)
         heading (str): The heading text of the section to extract as taken from the
             table of contents (e.g. "Thermal Analysis").
