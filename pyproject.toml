@@ -18,7 +18,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "fastmcp>=3.1.1",
+    "fastmcp>=3.2.3",
     "pandas>=3.0.1",
     "python-docx>=1.2.0",
     "spire-doc>=14.1.6",
