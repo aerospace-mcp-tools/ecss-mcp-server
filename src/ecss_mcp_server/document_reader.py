@@ -68,7 +68,7 @@ def extract_toc(document: docx.document.Document) -> list[TocEntry]:
         document (docx.document.Document): The document object to extract the ToC from.
 
     Returns:
-        list: A list of table of contents entries, each containing the section number,
+        list[TocEntry]: A list of table of contents entries, each containing the section number,
             heading text, page number and paragraph index.
 
     """
@@ -126,7 +126,7 @@ def extract_fots(document: docx.document.Document) -> list[Fot]:
         document (docx.document.Document): The document object to extract the List of Figures or Tables from.
 
     Returns:
-        list: A list of figures or tables, each containing the type (figure or table), number, text, and page number.
+        list[Fot]: A list of figures or tables, each containing the type (figure or table), number, text, and page number.
 
     """
     # List of figures and tables
