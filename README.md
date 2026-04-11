@@ -210,17 +210,30 @@ Interested in contributing to this project? Please see [CONTRIBUTING.md](CONTRIB
 
 ```text
 ecss-mcp-server/
-├── main.py                       # FastMCP server with ECSS tools
-├── document_cleanup.py           # Converts .doc to .docx and simplifies filenames at build time
-├── Dockerfile                    # Multi-stage build with cert and system lib support
-├── pyproject.toml                # Dependencies (fastmcp, python-docx, spire-doc, pandas)
+├── src/
+│   └── ecss_mcp_server/
+│       ├── __init__.py
+│       ├── document_parser.py    # Document name formatting and file type conversion at build time
+│       ├── document_reader.py    # Document reading functions
+│       └── ecss_mcp_server.py    # FastMCP server entry - defines MCP tools
+├── tests/
+│   ├── conftest.py               # Shared test fixtures
+│   ├── test_document_parser.py
+│   ├── test_document_reader.py
+│   └── test_ecss_mcp_server.py
 ├── documents/                    # Folder for ECSS .doc/.docx files (user-supplied)
+├── Dockerfile                    # Multi-stage build with cert and system lib support
+├── Makefile                      # Developer workflow targets (install, lint, test)
+├── pyproject.toml                # Dependencies and tool configuration (UV, ruff, pytest, mypy)
 ├── README.md                     # This file
 ├── CONTRIBUTING.md               # Contribution guidelines
 ├── SECURITY.md                   # Security policy and considerations
+├── CODE_OF_CONDUCT.md            # Community guidelines
+├── LICENSE                       # Apache 2.0 License
 └── .github/
-    ├── agents/                   # Custom Copilot agent definitions
-    └── skills/                   # Custom Copilot skill definitions
+    ├── copilot-instructions.md   # Copilot agent instructions
+    ├── skills/                   # Custom Copilot skill definitions
+    └── workflows/                # CI/CD GitHub Actions workflows
 ```
 
 ## Troubleshooting
