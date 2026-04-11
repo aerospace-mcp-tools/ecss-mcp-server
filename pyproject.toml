@@ -29,8 +29,8 @@ Homepage = "https://github.com/aerospace-mcp-tools/ecss-mcp-server"
 Repository = "https://github.com/aerospace-mcp-tools/ecss-mcp-server"
 
 [project.scripts]
-ecss-mcp-server = "ecss_mcp.main:main"
-ecss-parser = "ecss_parser.main:main"
+ecss-mcp-server = "ecss_mcp_server.ecss_mcp_server:main"
+ecss-parser = "ecss_mcp_server.document_parser:main"
 
 [dependency-groups]
 dev = [
@@ -113,7 +113,7 @@ cache-keys = [
 ]
 
 [tool.uv.build-backend]
-module-name = ["ecss_mcp", "ecss_parser"]
+module-name = ["ecss_mcp_server"]
 
 [build-system]
 requires = ["uv_build>=0.11.5,<0.12"]
