@@ -126,7 +126,8 @@ def extract_fots(document: docx.document.Document) -> list[Fot]:
         document (docx.document.Document): The document object to extract the List of Figures or Tables from.
 
     Returns:
-        list[Fot]: A list of figures or tables, each containing the type (figure or table), number, text, and page number.
+        list[Fot]: A list of figures or tables, each containing the type (figure or table), number, text, and
+        page number.
 
     """
     # List of figures and tables
