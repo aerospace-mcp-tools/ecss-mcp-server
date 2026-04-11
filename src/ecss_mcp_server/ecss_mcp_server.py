@@ -1,16 +1,12 @@
 """FastMCP server exposing ECSS standards documents as MCP tools."""
 
-# Import Python libraries
-from pathlib import Path
-
 # Import third-party libraries
 from fastmcp import FastMCP
 
 # Import local modules
-from ecss_mcp_server.document_reader import extract_fots, extract_section, extract_toc, load_document
+from ecss_mcp_server import document_reader
 
 app = FastMCP("ecss-mcp-server")
-
 
 @app.tool()
 def get_doc_ids() -> list[str]:
@@ -21,7 +17,7 @@ def get_doc_ids() -> list[str]:
         list[str]: A list of all documents in the document library.
 
     """
-    return [doc_file.stem for doc_file in Path("/app/documents").glob("*.docx")]
+    return document_reader.get_doc_ids()
 
 @app.tool()
 def get_doc_summary(doc_id: str) -> str:
@@ -38,10 +34,10 @@ def get_doc_summary(doc_id: str) -> str:
         str: A summary of the document including document scope and table of contents.
 
     """
-    doc = load_document(doc_id)
-    tocs = extract_toc(doc)
-    fots = extract_fots(doc)
-    scope = extract_section(doc, "1", "Scope")
+    doc = document_reader.load_document(doc_id)
+    tocs = document_reader.extract_toc(doc)
+    fots = document_reader.extract_fots(doc)
+    scope = document_reader.extract_section(doc, "1", "Scope")
     summary = f"Document ID: {doc_id}\n\nSummary:\n"
     summary += f"Scope:\n{scope}\n\n"
     summary += "Table of Contents:\n"
@@ -73,8 +69,8 @@ def get_section_text(doc_id: str, section: str, heading: str) -> str:
         str: The text of the specified section.
 
     """
-    doc = load_document(doc_id)
-    return extract_section(doc, section, heading)
+    doc = document_reader.load_document(doc_id)
+    return document_reader.extract_section(doc, section, heading)
 
 def main() -> None:
     """Entry point for the ecss-mcp-server script."""
