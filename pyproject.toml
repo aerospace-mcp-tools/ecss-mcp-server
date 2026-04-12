@@ -56,6 +56,8 @@ omit = [
 
 [tool.pytest.ini_options]
 minversion = "6.0"
+log_cli = true
+log_cli_level = "INFO"
 addopts = """
 --doctest-modules \
 --cov=./ \
