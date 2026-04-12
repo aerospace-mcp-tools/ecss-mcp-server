@@ -1,34 +1,48 @@
 """Helper functions for working with documents in the document library."""
 
 # Import Python libraries
+import re
 from pathlib import Path
 
-import docx.document
-
 # Import third-party libraries
+import docx.document
 from docx import Document
 
 # Define classes
 
-class TocEntry:
-    """Class for table of contents entries."""
+class TOCEntry:
+    """Class for Table of Contents (TOC) entries."""
 
-    def __init__(self) -> None:
-        """Initialize an empty ToC entry."""
-        self.section = None  # Section number
-        self.heading = None  # Heading text
-        self.page = None  # Page number
-        self.paragraph_i = None  # Paragraph index
+    def __init__(
+        self,
+        section_number: str | None = None,
+        heading_text: str | None = None,
+        page_number: int | None = None,
+        paragraph_index: int | None = None,
+    ) -> None:
+        """Initialize an empty TOC entry."""
+        self.section_number = section_number  # Section number
+        self.heading_text = heading_text  # Heading text
+        self.page_number = page_number  # Page number
+        self.paragraph_index = paragraph_index  # Paragraph index
 
 class Fot:
     """Class for List of Figures or Tables entries."""
 
-    def __init__(self, element: str, number: str, text: str, page: str) -> None:
+    def __init__(
+        self,
+        element: str | None = None,
+        number: str | None = None,
+        text: str | None = None,
+        page: str | None = None,
+        paragraph_i: int | None = None,
+    ) -> None:
         """Initialize a List of Figures or Tables entry."""
         self.element = element
         self.number = number
         self.text = text
         self.page = page
+        self.paragraph_i = paragraph_i
 
 # Get list of document IDs from the document library
 def get_doc_ids() -> list[str]:
@@ -59,8 +73,61 @@ def load_document(doc_id: str) -> docx.document.Document:
         raise FileNotFoundError(msg)
     return Document(str(doc_path))
 
+# Parse a line of the document Table of Contents and extract the section number, heading text and page number
+def parse_toc_line(toc_line: str) -> TOCEntry:
+    """
+    Parse a TOC line and return a TOCEntry with section number, heading text and page number.
+
+    Throws an error if the line does not match expected formats.
+
+    Args:
+        toc_line (str): A line of text from the Table of Contents to parse.
+
+    Returns:
+        TOCEntry: A Table of Contents entry containing the section number, heading text and page number.
+
+    """
+    # Define regex patterns for expected types of TOC entries
+    pattern_annex   = r'^(Annex\s+[A-Z]+)\s+(.+)\t(\d+)$'
+    pattern_numeric = r'^([A-Z](?:\.\d+)+|\d+(?:\.\d+)*)[\t ](.+)\t(\d+)$'
+    pattern_none    = r'^(.+)\t(\d+)$'
+
+    # Remove leading and trailing whitespace and convert to list of characters for parsing
+    toc_line = toc_line.strip()
+
+    # Strip any HYPERLINK field instruction prefix (older Word documents embed these literally)
+    toc_line = re.sub(r'^HYPERLINK\s+\\l\s+"[^"]+"\s*', '', toc_line)
+
+    # Check whether the TOC entry is an annex entry with a non-numeric section number (e.g. "Annex A")
+    m = re.match(pattern_annex, toc_line)
+    if m:
+        return TOCEntry(
+            section_number=m.group(1).strip(),
+            heading_text=m.group(2).strip(),
+            page_number=int(m.group(3).strip())
+        )
+    # Check whether the TOC entry has a numeric section number
+    m = re.match(pattern_numeric, toc_line)
+    if m:
+        return TOCEntry(
+            section_number=m.group(1).strip(),
+            heading_text=m.group(2).strip(),
+            page_number=int(m.group(3).strip())
+        )
+    # Catch TOC entries with no section number (e.g. "Bibliography")
+    m = re.match(pattern_none, toc_line)
+    if m:
+        return TOCEntry(
+            section_number=None,
+            heading_text=m.group(1).strip(),
+            page_number=int(m.group(2).strip())
+        )
+    # Throw an error if the TOC entry does not match any expected patterns
+    msg = f"TOC entry '{toc_line}' does not match expected formats."
+    raise ValueError(msg)
+
 # Extract the Table of Contents from the document
-def extract_toc(document: docx.document.Document) -> list[TocEntry]:
+def extract_toc(document: docx.document.Document) -> list[TOCEntry]:
     """
     Extract the Table of Contents from a document.
 
@@ -68,52 +135,32 @@ def extract_toc(document: docx.document.Document) -> list[TocEntry]:
         document (docx.document.Document): The document object to extract the ToC from.
 
     Returns:
-        list[TocEntry]: A list of table of contents entries, each containing the section number,
+        list[TOCEntry]: A list of table of contents entries, each containing the section number,
             heading text, page number and paragraph index.
 
     """
-    # Table of Contents
+    # Find and parse lines of the document table of contents
     toc_styles = {'toc 1', 'toc 2', 'toc 3'}
     toc_paragraphs = [p for p in document.paragraphs if p.style.name.lower() in toc_styles]
-
     tocs = []
-
     for p in toc_paragraphs:
-        toc_list = list(p.text.strip())
-        section = []
-        page = []
-        text = []
-        # Extract leading numbers (section numbers)
-        for i, char in enumerate(toc_list):
-            if char.isdigit() or char == '.':
-                section.append(char)
-            else:
-                text = toc_list[i:]
-                break
-        # Extract page number from the end
-        for i, char in enumerate(reversed(text)):
-            if char.isdigit():
-                page.append(char)
-            else:
-                text = text[:-i]  # Remove page number from text
-                page.reverse()
-                break
-        toc_entry = TocEntry()
-        toc_entry.section = ''.join(section).strip()
-        # Extract section heading text
-        toc_entry.heading = ''.join(text).strip()
-        toc_entry.page = ''.join(page).strip()
+        try:
+            toc_entry = parse_toc_line(p.text)
+        except ValueError as err:
+            msg = f"Error parsing TOC line '{p.text.strip()}': does not match expected formats."
+            raise ValueError(msg) from err
         tocs.append(toc_entry)
 
-    # Find heading paragraphs that match the table of contents by iterating through all headings
-    heading_styles = {'heading 0', 'heading 1', 'heading 2', 'heading 3', 'heading 4', 'heading 5'}
+    # Find the corresponding paragraph index for each TOC entry by matching the heading text to the document body
+    heading_styles = {'heading 0', 'heading 1', 'heading 2', 'heading 3', 'heading 4', 'heading 5',
+                      'annex1', 'annex2', 'annex3'}
     for i, p in enumerate(document.paragraphs):
         if p.style.name.lower() in heading_styles:
             heading_text = p.text.strip()
-            # Match the heading text with the next unmatched ToC entry
+            # Match the heading text with the next unmatched TOC entry
             for toc in tocs:
-                if toc.heading == heading_text and toc.paragraph_i is None:
-                    toc.paragraph_i = i
+                if toc.heading_text == heading_text and toc.paragraph_index is None:
+                    toc.paragraph_index = i
                     break
     return tocs
 
