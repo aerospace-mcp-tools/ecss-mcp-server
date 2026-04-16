@@ -313,7 +313,7 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=3.2.3" },
     { name = "pandas", specifier = ">=3.0.1" },
     { name = "python-docx", specifier = ">=1.2.0" },
-    { name = "spire-doc", specifier = ">=14.1.6" },
+    { name = "spire-doc", specifier = ">=14.4.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -1253,17 +1253,17 @@ wheels = [
 
 [[package]]
 name = "spire-doc"
-version = "14.1.6"
+version = "14.4.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "plum-dispatch" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/26/6a/ee061cac96800a5f0e23a85e3c6c4f6d30a05c30c92d430e25ec47be0ea5/spire_doc-14.1.6-py3-none-macosx_10_7_universal.whl", hash = "sha256:9a93d3bbae5c8dccdc8ef1a5a693edcaf29427fd7680a005772d2a00922d5112", size = 51889346, upload-time = "2026-01-23T02:53:42.204Z" },
-    { url = "https://files.pythonhosted.org/packages/ff/14/adae1cebff00d6a04fad980e749cf29574c7a4e051b89da3b4131d0a59ee/spire_doc-14.1.6-py3-none-macosx_11_0_arm64.whl", hash = "sha256:26e598e25bfcf441f60e3aea29ecf322fff7c70354985981495e2315b74c36d7", size = 28551053, upload-time = "2026-01-23T02:53:51.889Z" },
-    { url = "https://files.pythonhosted.org/packages/7e/58/b76868c7aeb3a98903f690a9181fe9850e8d77fd7c35f9048c6a233d8d5e/spire_doc-14.1.6-py3-none-manylinux2014_aarch64.whl", hash = "sha256:7dbccca05a2bd31d5aeabeff7c023503f5dba39bfb245f3119459358dc37f514", size = 24686828, upload-time = "2026-01-23T02:53:59.687Z" },
-    { url = "https://files.pythonhosted.org/packages/f1/a5/356014973e64ad90695be2e6d01c9fa3aa261a836edf035ea5eb87428fe6/spire_doc-14.1.6-py3-none-manylinux_2_31_x86_64.whl", hash = "sha256:2b17be6427bc6898a27d5acd75de7584146b4b915c96f92b5dbe5eb7cee4245d", size = 43670233, upload-time = "2026-01-23T02:54:09.522Z" },
-    { url = "https://files.pythonhosted.org/packages/98/a4/4f3fc544a2d90714c755fafb2260782b3c641e38e3371286d2ac6cc0c82e/spire_doc-14.1.6-py3-none-win_amd64.whl", hash = "sha256:a92d1cc5da19e419c457f809320cfa66448f11e1aecc2c1dddc9f85367ee4858", size = 28140948, upload-time = "2026-01-23T02:54:18.827Z" },
+    { url = "https://files.pythonhosted.org/packages/2b/cb/7e1e89771792ddc56961a4b080963a92e421faed81d8c1579cf7988a3967/spire_doc-14.4.2-py3-none-macosx_10_7_universal.whl", hash = "sha256:21d93dd04074d55020f95df4729fba35919ca4425f980a04aaa6eb75e9514e94", size = 52165758, upload-time = "2026-04-16T03:00:22.959Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/21/51718328f020640436f1296cfadb650d74e656a15fad37e163670adeaf2e/spire_doc-14.4.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:2058be6fb8a70bb05e355c6f6077630d3b270fb18e2b1bbf8a27f82899085332", size = 28690968, upload-time = "2026-04-16T03:03:32.086Z" },
+    { url = "https://files.pythonhosted.org/packages/43/06/39a56c992293de47dc3c9c80481d264d2e33e0d089c54ec651617e97ecc1/spire_doc-14.4.2-py3-none-manylinux2014_aarch64.whl", hash = "sha256:fb19eae448059c67d1ea90a06bcedf15949652ecffd30b5474dd3e659afc101e", size = 24822363, upload-time = "2026-04-16T03:03:41.36Z" },
+    { url = "https://files.pythonhosted.org/packages/84/93/2bcbf0aa8a4b62adbf1f54a3b78ad2b001a10ec7292f1c765785dc70f84f/spire_doc-14.4.2-py3-none-manylinux_2_31_x86_64.whl", hash = "sha256:c5b4fb81972df87a2562f230b562a2a5dfdc2c0384bc3f32b1d5dbd09f02a6ed", size = 44018026, upload-time = "2026-04-16T03:03:53.322Z" },
+    { url = "https://files.pythonhosted.org/packages/29/4d/0a26c3c2a38d4c3861090bebd64ff58a4454f5913f7cf58e33da2aa3dd6c/spire_doc-14.4.2-py3-none-win_amd64.whl", hash = "sha256:fca807d60451934c9d648465c4dac24f77c42d8a4ac266b048835fce4f7399e3", size = 28280085, upload-time = "2026-04-16T03:04:01.229Z" },
 ]
 
 [[package]]
