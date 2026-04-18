@@ -100,7 +100,7 @@ def cleanup_documents(doc_folder: Path) -> None:
             document.UpdateTableOfContents()
             toc_updated = True
             logger.info("Updated TOC for document: %s", docx_file)
-        except Exception:
+        except Exception:  # noqa: BLE001 — Spire.Doc does not document specific exception types
             logger.warning("Could not update TOC for %s, skipping TOC update and AcceptChanges", docx_file)
 
         if toc_updated and document.HasChanges:
