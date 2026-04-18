@@ -82,6 +82,7 @@ def simplify_filenames(doc_folder: Path) -> None:
 def cleanup_documents(doc_folder: Path) -> None:
     """
     Cleanup documents by accepting track changes and updating TOC entries.
+
     Args:
         doc_folder (Path): The folder path containing the documents to clean up.
 
@@ -91,17 +92,20 @@ def cleanup_documents(doc_folder: Path) -> None:
         document = Document()
         document.LoadFromFile(str(docx_file))
 
-        # Check if there are any tracked changes before accepting them
-        if(document.HasChanges):
-            document.AcceptChanges()
-            logger.info("Accepted tracked changes in document: %s", docx_file)
-
-        # Update TOC entries
+        # Update TOC entries first; only accept tracked changes when TOC update succeeds.
+        # Accepting changes before a failed TOC update can promote malformed tracked-change
+        # paragraphs into the committed document.
+        toc_updated = False
         try:
             document.UpdateTableOfContents()
+            toc_updated = True
             logger.info("Updated TOC for document: %s", docx_file)
         except Exception:
-            logger.warning("Could not update TOC for %s, skipping", docx_file)
+            logger.warning("Could not update TOC for %s, skipping TOC update and AcceptChanges", docx_file)
+
+        if toc_updated and document.HasChanges:
+            document.AcceptChanges()
+            logger.info("Accepted tracked changes in document: %s", docx_file)
 
         # Save the cleaned-up document
         document.SaveToFile(str(docx_file), FileFormat.Docx2016)
@@ -114,6 +118,6 @@ def main() -> None:
     convert_all_doc_to_docx(doc_folder)
     simplify_filenames(doc_folder)
     cleanup_documents(doc_folder)
-    
+
 if __name__ == "__main__":
     main()
