@@ -69,28 +69,26 @@ def test_parse_toc_line():
     with pytest.raises(ValueError, match="does not match expected formats"):
         ecss_mcp_server.document_reader.parse_toc_line(invalid_toc_line)
 
-def test_extract_toc():
+def test_extract_toc(subtests):
     """Test the extract_toc function for all documents in the document library."""
-    doc_ids = ecss_mcp_server.document_reader.get_doc_ids()
-    if not doc_ids:
-        pytest.skip("No documents available to test extract_toc")
-    for doc_id in doc_ids:
+    for j, doc_id in enumerate(ecss_mcp_server.document_reader.get_doc_ids()):
         logger.info("Testing extract_toc on document '%s'", doc_id)
-        doc = ecss_mcp_server.document_reader.load_document(doc_id)
-        # Calling extract_toc on the document should return a list of TOCEntry objects without errors
-        toc = ecss_mcp_server.document_reader.extract_toc(doc)
-        # Assert all TOCEntry values have a paragraph_index (i.e. each heading was located in the document body)
-        for toc_entry in toc:
-            assert toc_entry.paragraph_index is not None, (
-                f"TOC entry '{toc_entry.heading_text}' in document '{doc_id}' has paragraph_index None"
-            )
-        # Assert paragraph_index values are strictly increasing (headings are matched in order)
-        paragraph_indices = [toc_entry.paragraph_index for toc_entry in toc]
-        for i, paragraph_index in enumerate(paragraph_indices):
-            if i == 0:
-                continue
-            assert paragraph_index > paragraph_indices[i - 1], (
-                f"paragraph_index not strictly increasing at '{toc[i].heading_text}' in document '{doc_id}': "
-                f"{paragraph_indices[i - 1]} -> {paragraph_index}"
-            )
+        with subtests.test(doc_id=doc_id, index=j):
+            doc = ecss_mcp_server.document_reader.load_document(doc_id)
+            # Calling extract_toc on the document should return a list of TOCEntry objects without errors
+            toc = ecss_mcp_server.document_reader.extract_toc(doc)
+            # Assert all TOCEntry values have a paragraph_index (i.e. each heading was located in the document body)
+            for toc_entry in toc:
+                assert toc_entry.paragraph_index is not None, (
+                    f"TOC entry '{toc_entry.heading_text}' in document '{doc_id}' has paragraph_index None"
+                )
+            # Assert paragraph_index values are strictly increasing (headings are matched in order)
+            paragraph_indices = [toc_entry.paragraph_index for toc_entry in toc]
+            for i, paragraph_index in enumerate(paragraph_indices):
+                if i == 0:
+                    continue
+                assert paragraph_index > paragraph_indices[i - 1], (
+                    f"paragraph_index not strictly increasing at '{toc[i].heading_text}' in document '{doc_id}': "
+                    f"{paragraph_indices[i - 1]} -> {paragraph_index}"
+                )
 

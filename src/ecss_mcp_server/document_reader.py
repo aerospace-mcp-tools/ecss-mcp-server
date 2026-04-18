@@ -156,7 +156,7 @@ def extract_toc(document: docx.document.Document) -> list[TOCEntry]:
                       'annex1', 'annex2', 'annex3'}
     for i, p in enumerate(document.paragraphs):
         if p.style.name.lower() in heading_styles:
-            heading_text = p.text.strip()
+            heading_text = ' '.join(p.text.split()) # Normalize whitespace in heading text for matching
             # Match the heading text with the next unmatched TOC entry
             for toc in tocs:
                 if toc.heading_text == heading_text and toc.paragraph_index is None:
