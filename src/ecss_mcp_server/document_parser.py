@@ -62,6 +62,8 @@ def simplify_filenames(doc_folder: Path) -> None:
         if not match:
             match = re.search(r'ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?', stem)
         if not match:
+            match = re.search(r'ECSS-[A-Z]-\d{2}[A-Z]?', stem)
+        if not match:
             logger.warning("Could not extract ECSS document ID from filename: %s", filepath.name)
             continue
         simplified += match.group(0)
@@ -77,12 +79,41 @@ def simplify_filenames(doc_folder: Path) -> None:
             filepath.rename(new_filepath)
             logger.info("Renamed: %s -> %s", filepath.name, new_filename)
 
+def cleanup_documents(doc_folder: Path) -> None:
+    """
+    Cleanup documents by accepting track changes and updating TOC entries.
+    Args:
+        doc_folder (Path): The folder path containing the documents to clean up.
+
+    """
+    for docx_file in doc_folder.glob("*.docx"):
+        logger.info("Cleaning up document: %s", docx_file)
+        document = Document()
+        document.LoadFromFile(str(docx_file))
+
+        # Check if there are any tracked changes before accepting them
+        if(document.HasChanges):
+            document.AcceptChanges()
+            logger.info("Accepted tracked changes in document: %s", docx_file)
+
+        # Update TOC entries
+        try:
+            document.UpdateTableOfContents()
+            logger.info("Updated TOC for document: %s", docx_file)
+        except Exception:
+            logger.warning("Could not update TOC for %s, skipping", docx_file)
+
+        # Save the cleaned-up document
+        document.SaveToFile(str(docx_file), FileFormat.Docx2016)
+        document.Close()
+        logger.info("Cleaned up document: %s", docx_file)
 
 def main() -> None:
-    """Run the document cleanup pipeline."""
+    """Run the document parsing pipeline."""
     doc_folder = Path("/app/documents")
     convert_all_doc_to_docx(doc_folder)
     simplify_filenames(doc_folder)
-
+    cleanup_documents(doc_folder)
+    
 if __name__ == "__main__":
     main()
