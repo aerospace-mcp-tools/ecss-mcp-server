@@ -69,6 +69,21 @@ def test_parse_toc_line():
     with pytest.raises(ValueError, match="does not match expected formats"):
         ecss_mcp_server.document_reader.parse_toc_line(invalid_toc_line)
 
+    # Test sub-type 1c: numeric section number with spaces but no tab/page number
+    toc_line4 = "1.1.1  Standards"
+    toc_entry4 = ecss_mcp_server.document_reader.parse_toc_line(toc_line4)
+    assert toc_entry4.section_number == "1.1.1"
+    assert toc_entry4.heading_text == "Standards"
+    assert toc_entry4.page_number is None
+
+    # Test that bare label "TOC" (no section, no tab) still raises ValueError
+    with pytest.raises(ValueError, match="does not match expected formats"):
+        ecss_mcp_server.document_reader.parse_toc_line("TOC")
+
+    # Test that an empty string still raises ValueError
+    with pytest.raises(ValueError, match="does not match expected formats"):
+        ecss_mcp_server.document_reader.parse_toc_line("")
+
 def test_extract_toc(subtests):
     """Test the extract_toc function for all documents in the document library."""
     for j, doc_id in enumerate(ecss_mcp_server.document_reader.get_doc_ids()):

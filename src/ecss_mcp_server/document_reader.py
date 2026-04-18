@@ -1,12 +1,15 @@
 """Helper functions for working with documents in the document library."""
 
 # Import Python libraries
+import logging
 import re
 from pathlib import Path
 
 # Import third-party libraries
 import docx.document
 from docx import Document
+
+logger = logging.getLogger(__name__)
 
 # Define classes
 
@@ -88,9 +91,10 @@ def parse_toc_line(toc_line: str) -> TOCEntry:
 
     """
     # Define regex patterns for expected types of TOC entries
-    pattern_annex   = r'^(Annex\s+[A-Z]+)\s+(.+)\t(\d+)$'
-    pattern_numeric = r'^([A-Z](?:\.\d+)+|\d+(?:\.\d+)*)[\t ](.+)\t(\d+)$'
-    pattern_none    = r'^(.+)\t(\d+)$'
+    pattern_annex    = r'^(Annex\s+[A-Z]+)\s+(.+)\t(\d+)$'
+    pattern_numeric  = r'^([A-Z](?:\.\d+)+|\d+(?:\.\d+)*)[\t ](.+)\t(\d+)$'
+    pattern_no_page  = r'^([A-Z](?:\.\d+)+|\d+(?:\.\d+)*)\s{2,}(.+)$'
+    pattern_none     = r'^(.+)\t(\d+)$'
 
     # Remove leading and trailing whitespace and convert to list of characters for parsing
     toc_line = toc_line.strip()
@@ -113,6 +117,14 @@ def parse_toc_line(toc_line: str) -> TOCEntry:
             section_number=m.group(1).strip(),
             heading_text=m.group(2).strip(),
             page_number=int(m.group(3).strip())
+        )
+    # Check whether the TOC entry has a section number with spaces as separator and no page number
+    m = re.match(pattern_no_page, toc_line)
+    if m:
+        return TOCEntry(
+            section_number=m.group(1).strip(),
+            heading_text=m.group(2).strip(),
+            page_number=None
         )
     # Catch TOC entries with no section number (e.g. "Bibliography")
     m = re.match(pattern_none, toc_line)
@@ -146,20 +158,27 @@ def extract_toc(document: docx.document.Document) -> list[TOCEntry]:
     for p in toc_paragraphs:
         try:
             toc_entry = parse_toc_line(p.text)
-        except ValueError as err:
-            msg = f"Error parsing TOC line '{p.text.strip()}': does not match expected formats."
-            raise ValueError(msg) from err
+        except ValueError:
+            logger.warning("Skipping unparseable TOC line (style '%s'): %r", p.style.name, p.text.strip())
+            continue
         tocs.append(toc_entry)
 
     # Find the corresponding paragraph index for each TOC entry by matching the heading text to the document body
     heading_styles = {'heading 0', 'heading 1', 'heading 2', 'heading 3', 'heading 4', 'heading 5',
                       'annex1', 'annex2', 'annex3'}
+    # Pre-normalise TOC heading texts: collapse internal whitespace, replace non-breaking spaces (\xa0)
+    # and strip soft-hyphens (\xad) so they compare correctly against normalised body paragraphs.
+    toc_norms = [
+        ' '.join(e.heading_text.replace('\xa0', ' ').replace('\xad', '').split()) if e.heading_text else ''
+        for e in tocs
+    ]
     for i, p in enumerate(document.paragraphs):
         if p.style.name.lower() in heading_styles:
-            heading_text = ' '.join(p.text.split()) # Normalize whitespace in heading text for matching
+            # Normalise body heading: collapse whitespace, replace \xa0, strip \xad
+            heading_text = ' '.join(p.text.replace('\xa0', ' ').replace('\xad', '').split())
             # Match the heading text with the next unmatched TOC entry
-            for toc in tocs:
-                if toc.heading_text == heading_text and toc.paragraph_index is None:
+            for j, toc in enumerate(tocs):
+                if toc_norms[j] == heading_text and toc.paragraph_index is None:
                     toc.paragraph_index = i
                     break
     return tocs
