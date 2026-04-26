@@ -34,7 +34,7 @@ ecss-parser = "ecss_mcp_server.document_parser:main"
 
 [dependency-groups]
 dev = [
-    "mypy>=1.15.0",
+    "mypy>=1.20.2",
     "pytest>=8.4.0",
     "pytest-cov>=6.0.0",
     "ruff>=0.15.12",
