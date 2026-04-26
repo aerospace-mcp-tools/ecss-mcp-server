@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 # Import third-party libraries
+# Spire.Doc trial version limited to max 25 pages for editing.
 from spire.doc import Document, FileFormat
 
 logger = logging.getLogger(__name__)
@@ -79,45 +80,11 @@ def simplify_filenames(doc_folder: Path) -> None:
             filepath.rename(new_filepath)
             logger.info("Renamed: %s -> %s", filepath.name, new_filename)
 
-def cleanup_documents(doc_folder: Path) -> None:
-    """
-    Cleanup documents by accepting track changes and updating TOC entries.
-
-    Args:
-        doc_folder (Path): The folder path containing the documents to clean up.
-
-    """
-    for docx_file in doc_folder.glob("*.docx"):
-        logger.info("Cleaning up document: %s", docx_file)
-        document = Document()
-        document.LoadFromFile(str(docx_file))
-
-        # Update TOC entries first; only accept tracked changes when TOC update succeeds.
-        # Accepting changes before a failed TOC update can promote malformed tracked-change
-        # paragraphs into the committed document.
-        toc_updated = False
-        try:
-            document.UpdateTableOfContents()
-            toc_updated = True
-            logger.info("Updated TOC for document: %s", docx_file)
-        except Exception:  # noqa: BLE001 — Spire.Doc does not document specific exception types
-            logger.warning("Could not update TOC for %s, skipping TOC update and AcceptChanges", docx_file)
-
-        if toc_updated and document.HasChanges:
-            document.AcceptChanges()
-            logger.info("Accepted tracked changes in document: %s", docx_file)
-
-        # Save the cleaned-up document
-        document.SaveToFile(str(docx_file), FileFormat.Docx2016)
-        document.Close()
-        logger.info("Cleaned up document: %s", docx_file)
-
 def main() -> None:
     """Run the document parsing pipeline."""
     doc_folder = Path("/app/documents")
     convert_all_doc_to_docx(doc_folder)
     simplify_filenames(doc_folder)
-    cleanup_documents(doc_folder)
 
 if __name__ == "__main__":
     main()
