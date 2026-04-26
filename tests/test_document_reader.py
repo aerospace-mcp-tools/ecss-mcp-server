@@ -12,7 +12,6 @@ import ecss_mcp_server.document_reader
 
 logger = logging.getLogger(__name__)
 
-
 def test_get_doc_ids():
     """Test the get_doc_ids function to ensure it returns a list of strings."""
     doc_ids = ecss_mcp_server.document_reader.get_doc_ids()
@@ -69,7 +68,7 @@ def test_parse_toc_line():
     with pytest.raises(ValueError, match="does not match expected formats"):
         ecss_mcp_server.document_reader.parse_toc_line(invalid_toc_line)
 
-    # Test sub-type 1c: numeric section number with spaces but no tab/page number
+    # Test numeric section number with spaces but no tab/page number
     toc_line4 = "1.1.1  Standards"
     toc_entry4 = ecss_mcp_server.document_reader.parse_toc_line(toc_line4)
     assert toc_entry4.section_number == "1.1.1"
