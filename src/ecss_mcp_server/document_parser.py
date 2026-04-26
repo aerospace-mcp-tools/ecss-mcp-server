@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 # Import third-party libraries
+# Spire.Doc trial version limited to max 25 pages for editing.
 from spire.doc import Document, FileFormat
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,8 @@ def simplify_filenames(doc_folder: Path) -> None:
         if not match:
             match = re.search(r'ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?', stem)
         if not match:
+            match = re.search(r'ECSS-[A-Z]-\d{2}[A-Z]?', stem)
+        if not match:
             logger.warning("Could not extract ECSS document ID from filename: %s", filepath.name)
             continue
         simplified += match.group(0)
@@ -77,9 +80,8 @@ def simplify_filenames(doc_folder: Path) -> None:
             filepath.rename(new_filepath)
             logger.info("Renamed: %s -> %s", filepath.name, new_filename)
 
-
 def main() -> None:
-    """Run the document cleanup pipeline."""
+    """Run the document parsing pipeline."""
     doc_folder = Path("/app/documents")
     convert_all_doc_to_docx(doc_folder)
     simplify_filenames(doc_folder)

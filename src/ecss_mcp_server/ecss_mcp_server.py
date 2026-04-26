@@ -41,9 +41,9 @@ def get_doc_summary(doc_id: str) -> str:
     summary = f"Document ID: {doc_id}\n\nSummary:\n"
     summary += f"Scope:\n{scope}\n\n"
     summary += "Table of Contents:\n"
-    summary += "'section': 'heading'\n"
+    summary += "'section_number': 'heading_text'\n"
     for toc in tocs:
-        summary += f"'{toc.section}': '{toc.heading}'\n"
+        summary += f"'{toc.section_number}': '{toc.heading_text}'\n"
     summary += "\nList of Figures and Tables:\n"
     summary += "'element': 'number' 'text'\n"
     for fot in fots:
@@ -51,7 +51,7 @@ def get_doc_summary(doc_id: str) -> str:
     return summary
 
 @app.tool()
-def get_section_text(doc_id: str, section: str, heading: str) -> str:
+def get_section_text(doc_id: str, section_number: str, heading_text: str) -> str:
     """
     Get the text of a specific section from a document given its section number and heading.
 
@@ -61,8 +61,8 @@ def get_section_text(doc_id: str, section: str, heading: str) -> str:
 
     Args:
         doc_id (str): The ECSS ID of the document to extract the section from.
-        section (str): The section number to extract as taken from table of contents (e.g. "5.5.3")
-        heading (str): The heading text of the section to extract as taken from the table of contents
+        section_number (str): The section number to extract as taken from table of contents (e.g. "5.5.3")
+        heading_text (str): The heading text of the section to extract as taken from the table of contents
             (e.g. "Thermal Analysis").
 
     Returns:
@@ -70,7 +70,7 @@ def get_section_text(doc_id: str, section: str, heading: str) -> str:
 
     """
     doc = document_reader.load_document(doc_id)
-    return document_reader.extract_section(doc, section, heading)
+    return document_reader.extract_section(doc, section_number, heading_text)
 
 def main() -> None:
     """Entry point for the ecss-mcp-server script."""
