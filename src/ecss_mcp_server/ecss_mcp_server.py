@@ -5,16 +5,17 @@ from fastmcp import FastMCP
 
 # Import local modules
 from ecss_mcp_server import document_reader
+from ecss_mcp_server.document_reader import WordDocument
 
 app = FastMCP("ecss-mcp-server")
 
 @app.tool()
 def get_doc_ids() -> list[str]:
     """
-    Get a list of document IDs from the document library.
+    Get a list of ECSS doc_id in the document library.
 
     Returns:
-        list[str]: A list of all documents in the document library.
+        list[str]: A list of all doc_id in the document library.
 
     """
     return document_reader.get_doc_ids()
@@ -22,55 +23,49 @@ def get_doc_ids() -> list[str]:
 @app.tool()
 def get_doc_summary(doc_id: str) -> str:
     """
-    Get a summary of a document given its ID.
+    Get a summary of a ECSS document given its doc_id.
 
-    Integration pattern: Only use this tool after using the get_doc_ids tool to get a list of document IDs in
-    the document library, and only use it with those document IDs.
+    Integration pattern: Only use this tool after using the get_doc_ids tool to get a list of doc_id in
+    the document library, and only use it with those doc_id.
 
     Args:
-        doc_id (str): The ECSS ID of the document to summarize.
+        doc_id (str): The ECSS doc_id of the document to summarize.
 
     Returns:
         str: A summary of the document including document scope and table of contents.
 
     """
-    doc = document_reader.load_document(doc_id)
-    tocs = document_reader.extract_toc(doc)
-    fots = document_reader.extract_fots(doc)
-    scope = document_reader.extract_section(doc, "1", "Scope")
+    doc = WordDocument(doc_id)
+    # Get the scope if available
+    try:
+        scope = doc.get_section("1 Scope")
+    except ValueError:
+        scope = "Scope section not found."
     summary = f"Document ID: {doc_id}\n\nSummary:\n"
     summary += f"Scope:\n{scope}\n\n"
-    summary += "Table of Contents:\n"
-    summary += "'section_number': 'heading_text'\n"
-    for toc in tocs:
-        summary += f"'{toc.section_number}': '{toc.heading_text}'\n"
-    summary += "\nList of Figures and Tables:\n"
-    summary += "'element': 'number' 'text'\n"
-    for fot in fots:
-        summary += f"'{fot.element}': '{fot.number}' '{fot.text}'\n"
+    summary += "Headings:\n"
+    summary += doc.pretty_headings
+    #TODO: Add table of figures and tables to summary
     return summary
 
 @app.tool()
-def get_section_text(doc_id: str, section_number: str, heading_text: str) -> str:
+def get_section(doc_id: str, heading_text: str) -> str:
     """
-    Get the text of a specific section from a document given its section number and heading.
+    Get the text of a specific section from a document given its heading.
 
     Integration pattern: Only use this tool after using the get_doc_summary tool to get the table of contents
-    for a document, and only use it with section numbers and headings that are present in the table of
-    contents for that document.
+    for a document, and only use it with headings that are present in the table of contents for that document.
 
     Args:
         doc_id (str): The ECSS ID of the document to extract the section from.
-        section_number (str): The section number to extract as taken from table of contents (e.g. "5.5.3")
-        heading_text (str): The heading text of the section to extract as taken from the table of contents
-            (e.g. "Thermal Analysis").
+        heading_text (str): The heading text of the section to extract as taken from the table of contents.
 
     Returns:
         str: The text of the specified section.
 
     """
-    doc = document_reader.load_document(doc_id)
-    return document_reader.extract_section(doc, section_number, heading_text)
+    doc = WordDocument(doc_id)
+    return doc.get_section(heading_text)
 
 def main() -> None:
     """Entry point for the ecss-mcp-server script."""

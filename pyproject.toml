@@ -19,6 +19,7 @@ classifiers = [
 ]
 dependencies = [
     "fastmcp>=3.2.4",
+    "numpy>=2.0.0",
     "pandas>=3.0.1",
     "python-docx>=1.2.0",
     "spire-doc>=14.4.2",

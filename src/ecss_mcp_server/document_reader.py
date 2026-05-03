@@ -4,74 +4,79 @@
 import logging
 import re
 import unicodedata
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
+
+import docx.document
 
 # Import third-party libraries
-import docx.document
+import numpy as np
 from docx import Document
+from docx.table import Table
+from docx.text.paragraph import Paragraph
 
 logger = logging.getLogger(__name__)
 
-# Define classes
+# Define dataclasses
+class Heading(Paragraph):
+    """A heading paragraph item extracted from a Word document."""
 
-class TOCEntry:
-    """Class for Table of Contents (TOC) entries."""
+    def __init__(self, p: Any, parent: Any, *, level: int, annex: bool, index: int) -> None:
+        """Initialize a heading with its level, annex flag, and content index."""
+        super().__init__(p, parent)
+        self.level = level
+        self.annex = annex
+        self.index = index # The index of this heading in the document content list, used for section extraction
+        self.pretty_heading = None  # Human readable heading for content searching and llm response formatting
 
-    def __init__(
-        self,
-        section_number: str | None = None,
-        heading_text: str | None = None,
-        page_number: int | None = None,
-        style: str | None = None,
-        paragraph_index: int | None = None,
-    ) -> None:
-        """Initialize an empty TOC entry."""
-        self.section_number = section_number  # Section number
-        self.heading_text = heading_text  # Heading text
-        self.page_number = page_number  # Page number
-        self.style = style  # Paragraph style
-        self.paragraph_index = paragraph_index  # Paragraph index
+@dataclass
+class Content:
+    """Full content of a Word document, preserving paragraph/table order."""
 
-class Fot:
-    """Class for List of Figures or Tables entries."""
+    items: list[Paragraph | Table | Heading] = field(default_factory=list)
 
-    def __init__(
-        self,
-        element: str | None = None,
-        number: str | None = None,
-        text: str | None = None,
-        page: str | None = None,
-        paragraph_i: int | None = None,
-    ) -> None:
-        """Initialize a List of Figures or Tables entry."""
-        self.element = element
-        self.number = number
-        self.text = text
-        self.page = page
-        self.paragraph_i = paragraph_i
-
-# Normalize text
-def normalize_string(text: str) -> str:
+# Normalize style
+def normalize_style(style: str) -> str:
     """
-    Normalize a string in a standard way for comparison.
+    Normalize a style name in a standard way for comparison.
 
     Args:
-        text (str): The string to normalize.
+        style (str): The style name to normalize.
 
     Returns:
-        str: The normalized string.
+        str: The normalized style name.
 
     """
     # 1. Unicode normalization (handles weird/hidden chars)
-    text = unicodedata.normalize("NFKC", text)
+    style = unicodedata.normalize("NFKC", style)
     # 2. Case normalization (better than lower() for unicode)
-    text = text.casefold()
+    style = style.casefold()
     # 3. Remove control / non-printable characters
-    text = "".join(ch for ch in text if unicodedata.category(ch)[0] != "C")
+    style = "".join(ch for ch in style if unicodedata.category(ch)[0] != "C")
     # 4. Remove punctuation
-    text = re.sub(r"[^\w\s]", "", text)
-    # 5. Normalize whitespace (spaces, tabs, newlines → single space)
-    return re.sub(r"\s+", " ", text).strip()
+    style = re.sub(r"[^\w\s]", "", style)
+    # 5. Remove whitespace (spaces, tabs, newlines)
+    return re.sub(r"\s+", "", style)
+
+# Normalize heading
+def normalize_heading(heading: str) -> str:
+    """
+    Normalize a heading string in a standard way for comparison.
+
+    Args:
+        heading (str): The heading string to normalize.
+
+    Returns:
+        str: The normalized heading string.
+
+    """
+    # 1. Unicode normalization (handles weird/hidden chars)
+    heading = unicodedata.normalize("NFKC", heading)
+    # 2. Remove control / non-printable characters (but keep whitespace so step 3 can collapse it)
+    heading = "".join(ch for ch in heading if unicodedata.category(ch)[0] != "C" or ch.isspace())
+    # 3. Remove whitespace (spaces, tabs, newlines)
+    return re.sub(r"\s+", " ", heading).strip()
 
 # Get list of document IDs from the document library
 def get_doc_ids() -> list[str]:
@@ -84,229 +89,133 @@ def get_doc_ids() -> list[str]:
     """
     return [doc_file.stem for doc_file in Path("/app/documents").glob("*.docx")]
 
-# Load document from document library using document ID
-def load_document(doc_id: str) -> docx.document.Document:
-    """
-    Load a document from the document library using its document ID.
+# Define classes
 
-    Args:
-        doc_id (str): The document ID of the document to load.
+class WordDocument:
+    """Class for loading and working with Word documents."""
 
-    Returns:
-        docx.document.Document: The loaded document object.
+    def __init__(self, doc_id: str) -> None:
+        """Load a Word document from the document library using its document ID."""
+        # Initialize variables
+        self.doc_id = doc_id
+        self.document: docx.document.Document | None = None
+        self.content: Content | None = None
+        self.headings: list[Heading] = []
+        self.pretty_headings: str | None = None
+        # Initialize dicts
+        self.ANNEX_STYLES = {
+            'annex1': 1,
+            'annex2': 2,
+            'annex3': 3
+        }
+        self.HEADING_STYLES = {
+            'heading0': 0,
+            'heading1': 1,
+            'heading2': 2,
+            'heading3': 3
+        }
+        self.load_document()
+        self.parse_headings()
+        self.get_pretty_headings()
 
-    """
-    doc_path = Path(f"/app/documents/{doc_id}.docx")
-    if not doc_path.exists():
-        msg = f"Document with ID {doc_id} not found in document folder."
-        raise FileNotFoundError(msg)
-    return Document(str(doc_path))
+    def load_document(self) -> None:
+        """
+        Load a document from the document library using its document ID.
 
-# Parse a line of the document Table of Contents and extract the section number, heading text and page number
-def parse_toc_line(toc_line: str, style: str | None = None) -> TOCEntry:
-    """
-    Parse a TOC line and return a TOCEntry with section number, heading text and page number.
+        Populates self.document (raw docx Document) and self.content (Content)
+        with all paragraphs and tables in document order.
+        """
+        # Load the document using the provided document ID
+        doc_path = Path(f"/app/documents/{self.doc_id}.docx")
+        if not doc_path.exists():
+            msg = f"Document with ID {self.doc_id} not found in document folder."
+            raise FileNotFoundError(msg)
+        self.document = Document(str(doc_path))
+        # Extract the content of the document
+        self.content = Content()
+        for item in self.document.iter_inner_content():
+            if isinstance(item, (Paragraph, Table)):
+                self.content.items.append(item)
 
-    Throws an error if the line does not match expected formats.
+    def parse_headings(self) -> None:
+        """Parse document content items and classify heading paragraphs by style."""
+        for index, item in enumerate(self.content.items):
+            if isinstance(item, Paragraph):
+                # Check to see if paragraph contains content, if not skip
+                if not item.text.strip():
+                    continue
+                # Check to see if paragraph is a heading and assign level
+                level = self.HEADING_STYLES.get(normalize_style(item.style.name))
+                if level is not None:
+                    heading = Heading(item._p, item._parent, level=level, annex=False, index=index)
+                    self.headings.append(heading)
+                    # Replace paragraph with heading for section extraction
+                    self.content.items[index] = heading
+                    continue
+                # Check to see if paragraph is an annex heading and assign level
+                level = self.ANNEX_STYLES.get(normalize_style(item.style.name))
+                if level is not None:
+                    heading = Heading(item._p, item._parent, level=level, annex=True, index=index)
+                    self.headings.append(heading)
+                    # Replace paragraph with heading for section extraction
+                    self.content.items[index] = heading
+                    continue
 
-    Args:
-        toc_line (str): A line of text from the Table of Contents to parse.
-        style (str | None): The paragraph style of the TOC line.
+    def get_pretty_headings(self) -> None:
+        """
+        Get plain, newline-delineated, pretty-formatted headings.
 
-    Returns:
-        TOCEntry: A Table of Contents entry.
-
-    """
-    # Define regex patterns for expected types of TOC entries
-    pattern_annex    = r'^(Annex\s+[A-Z]+)\s+(.+)\t(\d+)$'
-    pattern_numeric  = r'^([A-Z](?:\.\d+)+|\d+(?:\.\d+)*)[\t ](.+)\t(\d+)$'
-    pattern_no_page  = r'^([A-Z](?:\.\d+)+|\d+(?:\.\d+)*)\s{2,}(.+)$'
-    pattern_none     = r'^(.+)\t(\d+)$'
-
-    # Remove leading and trailing whitespace and convert to list of characters for parsing
-    toc_line = toc_line.strip()
-
-    # Strip any HYPERLINK field instruction prefix (older Word documents embed these literally)
-    toc_line = re.sub(r'^HYPERLINK\s+\\l\s+"[^"]+"\s*', '', toc_line)
-
-    # Check whether the TOC entry is an annex entry with a non-numeric section number (e.g. "Annex A")
-    m = re.match(pattern_annex, toc_line)
-    if m:
-        return TOCEntry(
-            section_number=m.group(1).strip(),
-            heading_text=m.group(2).strip(),
-            page_number=int(m.group(3).strip()),
-            style=style
-        )
-    # Check whether the TOC entry has a numeric section number
-    m = re.match(pattern_numeric, toc_line)
-    if m:
-        return TOCEntry(
-            section_number=m.group(1).strip(),
-            heading_text=m.group(2).strip(),
-            page_number=int(m.group(3).strip()),
-            style=style
-        )
-    # Check for TOC entries with no section number (e.g. "Bibliography")
-    m = re.match(pattern_none, toc_line)
-    if m:
-        return TOCEntry(
-            section_number=None,
-            heading_text=m.group(1).strip(),
-            page_number=int(m.group(2).strip()),
-            style=style
-        )
-    # Check whether the TOC entry has a section number with spaces as separator and no page number
-    m = re.match(pattern_no_page, toc_line)
-    if m:
-        return TOCEntry(
-            section_number=m.group(1).strip(),
-            heading_text=m.group(2).strip(),
-            page_number=None,
-            style=style
-        )
-    # Throw an error if the TOC entry does not match any expected patterns
-    msg = f"TOC entry '{toc_line}' does not match expected formats."
-    raise ValueError(msg)
-
-# Extract the Table of Contents from the document
-def extract_toc(document: docx.document.Document) -> list[TOCEntry]:
-    """
-    Extract the Table of Contents from a document.
-
-    Args:
-        document (docx.document.Document): The document object to extract the ToC from.
-
-    Returns:
-        list[TOCEntry]: A list of table of contents entries, each containing the section number,
-            heading text, page number and paragraph index.
-
-    """
-    # Find and parse lines of the document table of contents
-    toc_styles = {'toc 1', 'toc 2', 'toc 3'}
-    toc_paragraphs = [p for p in document.paragraphs if p.style.name.lower() in toc_styles]
-    tocs = []
-    for p in toc_paragraphs:
-        try:
-            toc_entry = parse_toc_line(p.text, style=p.style.name)
-        except ValueError:
-            logger.warning("Skipping unparseable TOC line (style '%s'): %r", p.style.name, p.text.strip())
-            continue
-        tocs.append(toc_entry)
-
-    # Find the corresponding paragraph index for each TOC entry by matching the heading text to the document body
-    heading_styles = {'heading 0', 'heading 1', 'heading 2', 'heading 3', 'heading 4', 'heading 5',
-                      'annex1', 'annex2', 'annex3'}
-    for i, p in enumerate(document.paragraphs):
-        if p.style.name.lower() in heading_styles:
-            heading_text = normalize_string(p.text)
-            # Match the heading text with the next unmatched TOC entry
-            for toc in tocs:
-                if normalize_string(toc.heading_text) == heading_text and toc.paragraph_index is None:
-                    toc.paragraph_index = i
-                    break
-    return tocs
-
-# Extract the List of Figures or Tables from the document
-def extract_fots(document: docx.document.Document) -> list[Fot]:
-    """
-    Extract the List of Figures or Tables from a document.
-
-    Args:
-        document (docx.document.Document): The document object to extract the List of Figures or Tables from.
-
-    Returns:
-        list[Fot]: A list of figures or tables, each containing the type (figure or table), number, text, and
-        page number.
-
-    """
-    # List of figures and tables
-    list_styles = {'table of figures'}
-    list_paragraphs = [p for p in document.paragraphs if p.style.name.lower() in list_styles]
-
-    fots = []
-
-    for p in list_paragraphs:
-        list_line = list(p.text.strip())
-        element = ''
-        number = []
-        page = []
-        # Determine if it's a figure or table
-        if p.text.strip().startswith('Figure'):
-            element = 'Figure'
-            text = list_line[6:]  # Remove 'Figure' from text
-        elif p.text.strip().startswith('Table'):
-            element = 'Table'
-            text = list_line[5:]  # Remove 'Table' from text
-        else:
-            continue  # Skip if it doesn't start with Figure or Table
-
-        # Extract figure number from the start
-        # Strip leading spaces
-        text = ''.join(text).strip()
-        text = list(text)
-        for i, char in enumerate(text):
-            if char != ' ':
-                number.append(char)
+        For content searching and returning to the client.
+        """
+        section_number = np.zeros(6, dtype=int)
+        annex_number = np.zeros(6, dtype=int)
+        self.pretty_headings = ""
+        # For each heading, derive the section number and create a pretty string with section number and text
+        for heading in self.headings:
+            if heading.annex:
+                # Format annex headings using letters
+                annex_number[heading.level] += 1
+                annex_number[heading.level + 1:] = 0
+                if heading.level == 1:
+                    heading.pretty_heading = f"Annex {chr(64 + annex_number[1])} {normalize_heading(heading.text)}"
+                else:
+                    suffix = ".".join(str(num) for num in annex_number[2 : heading.level + 1] if num > 0)
+                    heading.pretty_heading = f"{chr(64 + annex_number[1])}.{suffix} {normalize_heading(heading.text)}"
             else:
-                text = text[i:]
+                # Format regular headings using numbers
+                section_number[heading.level] += 1
+                section_number[heading.level + 1:] = 0
+                if heading.level == 0:
+                    heading.pretty_heading = f"{normalize_heading(heading.text)}"
+                else:
+                    nums = ".".join(str(num) for num in section_number[1 : heading.level + 1] if num > 0)
+                    heading.pretty_heading = f"{nums} {normalize_heading(heading.text)}"
+            self.pretty_headings += heading.pretty_heading + "\n"
+
+    def get_section(self, pretty_heading: str) -> str:
+        """Get the text of a section of the document based on its pretty heading."""
+        # Find the start and end index of the section in the document content based on the pretty heading
+        start_index = None # Initialize start index to None to check if heading is found
+        end_index = len(self.content.items) # Default to end of document if no next heading is found
+        for heading in self.headings:
+            # If this heading matches the pretty heading, set the start index to this heading's index
+            if heading.pretty_heading == pretty_heading:
+                matched_heading = heading
+                start_index = heading.index
+                continue
+            # Find the start of the next section
+            if start_index is not None and heading.level <= matched_heading.level:
+                end_index = heading.index
                 break
-
-        # Extract page number from the end
-        for i, char in enumerate(reversed(text)):
-            if char.isdigit():
-                page.append(char)
-            else:
-                if i > 0:
-                    text = text[:-i]  # Remove page number from text
-                page.reverse()
-                break
-        page = ''.join(page).strip()
-        text = ''.join(text).strip()
-        number = ''.join(number).strip()
-        fot_entry = Fot(element, number, text, page)
-        fots.append(fot_entry)
-    return fots
-
-def extract_section(document: docx.document.Document, section_number: str, heading_text: str) -> str:
-    """
-    Extract the text of a specific section from a document.
-
-    Args:
-        document (docx.document.Document): The document object to extract the section from.
-        section_number (str): The section number to extract as taken from table of contents (i.e. 1.2)
-        heading_text (str): The heading text of the section to extract as taken from the
-            table of contents (e.g. "Thermal Analysis").
-
-    Returns:
-        str: The text of the specified section.
-
-    """
-    toc = extract_toc(document)
-    # Match the ToC entry to the section number and heading
-    matched_toc_entry = next(
-        (toc_entry for toc_entry in toc
-         if toc_entry.section_number == section_number and toc_entry.heading_text == heading_text),
-        None,
-    )
-    if matched_toc_entry is None:
-        msg = "Section not found in table of contents"
-        raise ValueError(msg)
-    if matched_toc_entry.paragraph_index is None:
-        msg = "Section could not be located in the document body"
-        raise ValueError(msg)
-    # Find next ToC entry at the same level as this, if not default to end of document
-    next_toc_entry = toc[-1]
-    for toc_entry in toc:
-        if (
-            toc_entry.style == matched_toc_entry.style
-            and toc_entry.paragraph_index is not None
-            and toc_entry.paragraph_index > matched_toc_entry.paragraph_index
-        ):
-            next_toc_entry = toc_entry
-            break
-    # Iterate between paragraphs from the matched ToC entry to the next ToC entry at the same level and extract text
-    section_text = ""
-    for p in document.paragraphs[matched_toc_entry.paragraph_index : next_toc_entry.paragraph_index]:
-        section_text += p.text + "\n"
-    return section_text
+        if start_index is None:
+            msg = "Section not found in document headings"
+            raise ValueError(msg)
+        # Extract the section text based on the start and end index
+        section_text = ""
+        for item in self.content.items[start_index:end_index]:
+            if isinstance(item, Heading):
+                section_text += item.pretty_heading + "\n"
+            elif isinstance(item, Paragraph):
+                section_text += item.text + "\n"
+            # TODO: Handle tables
+        return section_text
