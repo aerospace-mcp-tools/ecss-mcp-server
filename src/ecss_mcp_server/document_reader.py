@@ -18,6 +18,9 @@ from docx.text.paragraph import Paragraph
 
 logger = logging.getLogger(__name__)
 
+# Define constants
+MAX_HEADING_DEPTH = 6
+
 # Define dataclasses
 class Heading(Paragraph):
     """A heading paragraph item extracted from a Word document."""
@@ -167,8 +170,8 @@ class WordDocument:
 
         For content searching and returning to the client.
         """
-        section_number = np.zeros(6, dtype=int)
-        annex_number = np.zeros(6, dtype=int)
+        section_number = np.zeros(MAX_HEADING_DEPTH, dtype=int)
+        annex_number = np.zeros(MAX_HEADING_DEPTH, dtype=int)
         self.pretty_headings = ""
         # For each heading, derive the section number and create a pretty string with section number and text
         for heading in self.headings:
