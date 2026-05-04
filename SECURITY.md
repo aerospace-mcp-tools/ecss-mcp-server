@@ -55,9 +55,10 @@ This container is configured to work with Zscaler. This is done by installing yo
 Dependencies are managed via `uv` and pinned in `uv.lock`:
 
 - `fastmcp`: MCP server framework
+- `numpy`: Array manipulation
 - `pandas`: Data manipulation
 - `python-docx`: Reading word documents
-- `spire-doc`: Converting between doc and docx file types
+- `libreoffice`: Converting between doc and docx file types
 
 ## Security Updates
 
