@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class Heading(Paragraph):
     """A heading paragraph item extracted from a Word document."""
 
-    def __init__(self, p: Any, parent: Any, *, level: int, annex: bool, index: int) -> None:
+    def __init__(self, p: Any, parent: Any, *, level: int, annex: bool, index: int) -> None: # noqa: ANN401
         """Initialize a heading with its level, annex flag, and content index."""
         super().__init__(p, parent)
         self.level = level
@@ -104,15 +104,15 @@ class WordDocument:
         self.pretty_headings: str | None = None
         # Initialize dicts
         self.ANNEX_STYLES = {
-            'annex1': 1,
-            'annex2': 2,
-            'annex3': 3
+            "annex1": 1,
+            "annex2": 2,
+            "annex3": 3
         }
         self.HEADING_STYLES = {
-            'heading0': 0,
-            'heading1': 1,
-            'heading2': 2,
-            'heading3': 3
+            "heading0": 0,
+            "heading1": 1,
+            "heading2": 2,
+            "heading3": 3
         }
         self.load_document()
         self.parse_headings()
@@ -147,7 +147,7 @@ class WordDocument:
                 # Check to see if paragraph is a heading and assign level
                 level = self.HEADING_STYLES.get(normalize_style(item.style.name))
                 if level is not None:
-                    heading = Heading(item._p, item._parent, level=level, annex=False, index=index)
+                    heading = Heading(item._p, item._parent, level=level, annex=False, index=index) # noqa: SLF001
                     self.headings.append(heading)
                     # Replace paragraph with heading for section extraction
                     self.content.items[index] = heading
@@ -155,7 +155,7 @@ class WordDocument:
                 # Check to see if paragraph is an annex heading and assign level
                 level = self.ANNEX_STYLES.get(normalize_style(item.style.name))
                 if level is not None:
-                    heading = Heading(item._p, item._parent, level=level, annex=True, index=index)
+                    heading = Heading(item._p, item._parent, level=level, annex=True, index=index) # noqa: SLF001
                     self.headings.append(heading)
                     # Replace paragraph with heading for section extraction
                     self.content.items[index] = heading
@@ -217,5 +217,6 @@ class WordDocument:
                 section_text += item.pretty_heading + "\n"
             elif isinstance(item, Paragraph):
                 section_text += item.text + "\n"
-            # TODO: Handle tables
+            # TODO(Benedict Rose): Handle tables
+            # https://github.com/aerospace-mcp-tools/ecss-mcp-server/issues/3
         return section_text

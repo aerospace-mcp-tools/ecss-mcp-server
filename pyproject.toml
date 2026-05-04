@@ -79,10 +79,11 @@ lint.ignore = [
     "D212",    # Multi-line summary first line
     "ISC001",  # Single-line implicit string concatenation (disabled due to formatter conflict)
     "PLR0913", # Too many arguments
-    "Q000",    # Single quotes found but double quotes preferred
+    "FIX002",  # No TODO
 ]
 line-length = 120
 show-fixes = true
+extend-exclude = [".github/skills/inspect-document/scripts/inspect_document.py"]
 src = ["src"]
 
 [tool.ruff.lint.flake8-copyright]

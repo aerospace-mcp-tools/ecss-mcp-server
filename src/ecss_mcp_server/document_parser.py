@@ -59,18 +59,18 @@ def simplify_filenames(doc_folder: Path) -> None:
         simplified = ""
 
         # Use regex to extract the ECSS document ID (e.g. ECSS-Q-ST-70-01C)
-        match = re.search(r'ECSS-[A-Z]-[A-Z]{2}-\d{2}-\d{2}[A-Z]?', stem)
+        match = re.search(r"ECSS-[A-Z]-[A-Z]{2}-\d{2}-\d{2}[A-Z]?", stem)
         if not match:
-            match = re.search(r'ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?', stem)
+            match = re.search(r"ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?", stem)
         if not match:
-            match = re.search(r'ECSS-[A-Z]-\d{2}[A-Z]?', stem)
+            match = re.search(r"ECSS-[A-Z]-\d{2}[A-Z]?", stem)
         if not match:
             logger.warning("Could not extract ECSS document ID from filename: %s", filepath.name)
             continue
         simplified += match.group(0)
 
         # Use regex to extract any annex suffix (e.g. _Annex A)
-        annex_match = re.search(r'(_Annex [A-Z])', stem)
+        annex_match = re.search(r"(_Annex [A-Z])", stem)
         simplified += annex_match.group(0) if annex_match else ""
 
         new_filename = simplified + ext

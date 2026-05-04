@@ -45,7 +45,8 @@ def get_doc_summary(doc_id: str) -> str:
     summary += f"Scope:\n{scope}\n\n"
     summary += "Headings:\n"
     summary += doc.pretty_headings
-    #TODO: Add table of figures and tables to summary
+    # TODO(Benedict Rose): Add table of figures and tables to summary
+    # https://github.com/aerospace-mcp-tools/ecss-mcp-server/issues/3
     return summary
 
 @app.tool()
