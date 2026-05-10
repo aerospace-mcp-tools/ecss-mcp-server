@@ -6,8 +6,8 @@ FastMCP-based MCP server that provides agentic access to ECSS (European Cooperat
 
 | Path | Purpose |
 |------|---------|
-| `src/ecss_mcp_server/ecss_mcp_server.py` | FastMCP server entry — defines the three MCP tools (`get_doc_ids`, `get_doc_summary`, `get_section_text`) via `@app.tool()` (entry point: `ecss-mcp-server`) |
-| `src/ecss_mcp_server/document_reader.py` | Core document parsing — `load_document()`, `extract_toc()`, `extract_fots()`, `extract_section()`; defines `TocEntry` and `Fot` data classes |
+| `src/ecss_mcp_server/ecss_mcp_server.py` | FastMCP server entry — defines the three MCP tools (`get_doc_ids`, `get_doc_summary`, `get_section`) via `@app.tool()` (entry point: `ecss-mcp-server`) |
+| `src/ecss_mcp_server/document_reader.py` | Core document parsing — `WordDocument` class with `load_document()`, `parse_headings()`, `get_pretty_headings()`, `get_section()`; defines `Heading` and `Content` data classes |
 | `src/ecss_mcp_server/document_parser.py` | Build-time script: converts `.doc` → `.docx`, simplifies filenames to ECSS IDs (entry point: `ecss-parser`) |
 | `documents/` | Place `.doc`/`.docx` ECSS standards files here before building |
 | `Dockerfile` | Builds image with Python 3.14, installs deps via UV, runs cleanup, starts server |
@@ -39,7 +39,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for full dev setup details.
 - **Adding tools**: Use the `@app.tool()` FastMCP decorator in `src/ecss_mcp_server/ecss_mcp_server.py`. No new files needed for new tools.
 - **Document path inside container**: `/app/documents/{doc_id}.docx`
 - **ECSS document ID format**: `ECSS-[A-Z]-[A-Z]{2}-\d{2}[A-Z]?` (e.g. `ECSS-E-ST-32C`) or `ECSS-[A-Z]-[A-Z]{2}-\d{2}-\d{2}[A-Z]?` for sub-numbered docs. The `src/ecss_mcp_server/document_parser.py` regex handles both patterns.
-- **Agentic tool call order**: `get_doc_ids` → `get_doc_summary` → `get_section_text`. Always call `get_doc_summary` before `get_section_text` to obtain valid section numbers and headings.
+- **Agentic tool call order**: `get_doc_ids` → `get_doc_summary` → `get_section`. Always call `get_doc_summary` before `get_section` to obtain valid section numbers and headings.
 - **Package manager**: UV (`uv sync`, `uv run`). Do not use `pip` directly.
 - **Linter**: Ruff run via `make lint` (configured in `pyproject.toml`). Follow ruff rules for code style and quality.
 - **Testing**: Pytest run via `make test` (configured in `pyproject.toml`). Write tests in `tests/` and follow existing test patterns.
@@ -49,5 +49,5 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for full dev setup details.
 
 - Documents are **not committed** to the repo — they must be downloaded separately from [ecss.nl](https://ecss.nl/standards/active-standards/) and placed in `documents/` before build.
 - Corporate network / Zscaler users must supply `zscaler-root-ca.crt` in the repo root before building. See [SECURITY.md](../SECURITY.md).
-- `spire-doc` (`.doc` → `.docx` conversion) requires `libicu-dev`, `libfontconfig1`, and `libfreetype6` — these are installed in the Dockerfile; do not remove them.
+- `libreoffice` is installed in the Dockerfile for `.doc` → `.docx` conversion; do not remove it.
 - After rebuilding the image, **restart VS Code** to reload the MCP client.

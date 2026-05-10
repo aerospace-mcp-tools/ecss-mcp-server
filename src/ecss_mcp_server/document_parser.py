@@ -3,6 +3,7 @@
 # Import Python libraries
 import logging
 import re
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -18,9 +19,13 @@ def convert_doc_to_docx(doc_file: Path, docx_file: Path) -> None:
         docx_file (Path): The file path to save the converted .docx file.
 
     """
-    subprocess.run(
+    libreoffice = shutil.which("libreoffice")
+    if libreoffice is None:
+        msg = "libreoffice not found on PATH"
+        raise FileNotFoundError(msg)
+    subprocess.run(  # noqa: S603
         [
-            "libreoffice",
+            libreoffice,
             "--headless",
             "--convert-to",
             "docx",
