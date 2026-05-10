@@ -270,8 +270,7 @@ ecss-mcp-server/
 - **Python**: 3.14 (slim-trixie base image)
 - **FastMCP**: ≥3.1.1 (MCP protocol implementation)
 - **python-docx**: ≥1.2.0 (reading `.docx` document content)
-- **spire-doc**: ≥14.1.6 (converting `.doc` files to `.docx` at build time)
-- **pandas**: ≥3.0.1 (data processing)
+- **libreoffice**: headless (converting `.doc` files to `.docx` at build time)
 
 ### Security Considerations
 

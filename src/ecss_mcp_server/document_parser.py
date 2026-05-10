@@ -3,31 +3,38 @@
 # Import Python libraries
 import logging
 import re
+import shutil
+import subprocess
 from pathlib import Path
-
-# Import third-party libraries
-# Spire.Doc trial version limited to max 25 pages for editing.
-from spire.doc import Document, FileFormat
 
 logger = logging.getLogger(__name__)
 
 # Convert from .doc to .docx format
 def convert_doc_to_docx(doc_file: Path, docx_file: Path) -> None:
     """
-    Convert a .doc file to .docx format using Spire.Doc library.
+    Convert a .doc file to .docx format using LibreOffice headless.
 
     Args:
         doc_file (Path): The file path of the .doc file to convert.
         docx_file (Path): The file path to save the converted .docx file.
 
     """
-    # Open the .doc file
-    document = Document()
-    document.LoadFromFile(str(doc_file))
-
-    # Save the .doc file to a .docx file
-    document.SaveToFile(str(docx_file), FileFormat.Docx2016)
-    document.Close()
+    libreoffice = shutil.which("libreoffice")
+    if libreoffice is None:
+        msg = "libreoffice not found on PATH"
+        raise FileNotFoundError(msg)
+    subprocess.run(  # noqa: S603
+        [
+            libreoffice,
+            "--headless",
+            "--convert-to",
+            "docx",
+            "--outdir",
+            str(docx_file.parent),
+            str(doc_file),
+        ],
+        check=True,
+    )
 
 def convert_all_doc_to_docx(doc_folder: Path) -> None:
     """
