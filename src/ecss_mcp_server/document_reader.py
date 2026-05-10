@@ -81,6 +81,60 @@ def normalize_heading(heading: str) -> str:
     # 3. Remove whitespace (spaces, tabs, newlines)
     return re.sub(r"\s+", " ", heading).strip()
 
+# Parse a table into a markdown formatted string
+def parse_table(table: Table) -> str:
+    """
+    Convert a python-docx Table into a markdown-formatted table string.
+
+    Merged cells are handled by emitting the cell text for the first grid
+    position and an empty string for every subsequent position covered by
+    the same merge span (detected via ``._tc`` element identity).
+
+    Omitted cells at the start or end of a row (Word rows with
+    ``grid_cols_before`` / ``grid_cols_after``) are represented as empty
+    columns so that column alignment is preserved across rows.
+
+    All rows are emitted uniformly — no row is designated as a header and
+    no ``| --- |`` separator is inserted.
+
+    Nested tables are treated as flat text via ``cell.text``.
+
+    Args:
+        table (Table): The python-docx Table object to convert.
+
+    Returns:
+        str: A markdown table string, or an empty string for empty tables.
+
+    """
+    if not table.rows:
+        return ""
+
+    all_rows_data: list[list[str]] = []
+    for row in table.rows:
+        row_data: list[str] = []
+        # Prepend empty cells for omitted leading columns
+        row_data.extend("" for _ in range(row.grid_cols_before))
+        # Deduplicate merged cells by ._tc element identity
+        seen_tc = set()
+        for cell in row.cells:
+            tc_id = id(cell._tc)  # noqa: SLF001
+            if tc_id in seen_tc:
+                row_data.append("")
+            else:
+                seen_tc.add(tc_id)
+                row_data.append(cell.text)
+        # Append empty cells for omitted trailing columns
+        row_data.extend("" for _ in range(row.grid_cols_after))
+        all_rows_data.append(row_data)
+
+    col_count = max(len(r) for r in all_rows_data)
+    lines: list[str] = []
+    for row_data in all_rows_data:
+        # Pad rows that are shorter than the widest row
+        padded = row_data + [""] * (col_count - len(row_data))
+        lines.append("| " + " | ".join(padded) + " |")
+    return "\n".join(lines)
+
 # Get list of document IDs from the document library
 def get_doc_ids() -> list[str]:
     """
@@ -220,6 +274,6 @@ class WordDocument:
                 section_text += item.pretty_heading + "\n"
             elif isinstance(item, Paragraph):
                 section_text += item.text + "\n"
-            # TODO(Benedict Rose): Handle tables
-            # https://github.com/aerospace-mcp-tools/ecss-mcp-server/issues/3
+            elif isinstance(item, Table):
+                section_text += parse_table(item) + "\n"
         return section_text
