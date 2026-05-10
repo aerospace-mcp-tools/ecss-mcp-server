@@ -56,7 +56,6 @@ Dependencies are managed via `uv` and pinned in `uv.lock`:
 
 - `fastmcp`: MCP server framework
 - `numpy`: Array manipulation
-- `pandas`: Data manipulation
 - `python-docx`: Reading word documents
 - `libreoffice`: Converting between doc and docx file types
 
