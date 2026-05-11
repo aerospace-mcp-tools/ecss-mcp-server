@@ -233,3 +233,7 @@ tests/reports
 
 # Logs
 logs/
+
+# Certificates
+*.cer
+*.crt
