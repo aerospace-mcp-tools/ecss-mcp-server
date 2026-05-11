@@ -50,9 +50,9 @@ Get a summary of a document including its scope and table of contents.
 Give me a summary of ECSS-E-ST-32 using the ecss-mcp-server.
 ```
 
-### 3. `get_section_text`
+### 3. `get_section`
 
-Extract the full text of a specific section from a document.
+Extract the full text and tables of a specific section from a document.
 
 **Integration pattern:** Call `get_doc_summary` first to get the table of contents, then use section numbers and headings exactly as they appear there.
 
