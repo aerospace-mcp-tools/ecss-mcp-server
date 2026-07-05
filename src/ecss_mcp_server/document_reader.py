@@ -3,6 +3,7 @@
 # Import Python libraries
 import logging
 import re
+import textwrap
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,6 +21,10 @@ logger = logging.getLogger(__name__)
 
 # Define constants
 MAX_HEADING_DEPTH = 6
+# VSCode MCP client truncates tool output at 2000 characters per line.
+# Wrapping at a safe margin below this limit prevents truncation of requirements text.
+# See: https://github.com/microsoft/vscode/issues/321578
+MAX_LINE_LENGTH = 1800
 
 # Define dataclasses
 class Heading(Paragraph):
@@ -80,6 +85,26 @@ def normalize_heading(heading: str) -> str:
     heading = "".join(ch for ch in heading if unicodedata.category(ch)[0] != "C" or ch.isspace())
     # 3. Remove whitespace (spaces, tabs, newlines)
     return re.sub(r"\s+", " ", heading).strip()
+
+# Wrap paragraph text to MAX_LINE_LENGTH to avoid VSCode MCP truncation
+def wrap_paragraph(text: str) -> str:
+    """
+    Wrap paragraph text to avoid line-length truncation in MCP clients.
+
+    VSCode's MCP client truncates tool output at 2000 characters per line.
+    This function wraps long paragraphs at MAX_LINE_LENGTH to prevent truncation
+    of requirements text returned by get_section.
+
+    See: https://github.com/microsoft/vscode/issues/321578
+
+    Args:
+        text (str): The paragraph text to wrap.
+
+    Returns:
+        str: The wrapped text with lines no longer than MAX_LINE_LENGTH characters.
+
+    """
+    return textwrap.fill(text, width=MAX_LINE_LENGTH, break_long_words=False, break_on_hyphens=False)
 
 # Parse a table into a markdown formatted string
 def parse_table(table: Table) -> str:
@@ -273,7 +298,7 @@ class WordDocument:
             if isinstance(item, Heading):
                 section_text += item.pretty_heading + "\n"
             elif isinstance(item, Paragraph):
-                section_text += item.text + "\n"
+                section_text += wrap_paragraph(item.text) + "\n"
             elif isinstance(item, Table):
                 section_text += parse_table(item) + "\n"
         return section_text
