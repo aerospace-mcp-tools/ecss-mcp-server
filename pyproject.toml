@@ -18,8 +18,8 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "fastmcp>=3.2.4",
-    "numpy>=2.0.0",
+    "fastmcp>=3.4.2",
+    "numpy>=2.5.0",
     "python-docx>=1.2.0",
 ]
 
@@ -34,9 +34,9 @@ ecss-parser = "ecss_mcp_server.document_parser:main"
 [dependency-groups]
 dev = [
     "mypy>=2.1.0",
-    "pytest>=8.4.0",
+    "pytest>=9.1.1",
     "pytest-cov>=6.0.0",
-    "ruff>=0.15.12",
+    "ruff>=0.15.20",
 ]
 
 [tool.coverage.report]
@@ -118,5 +118,5 @@ cache-keys = [
 module-name = ["ecss_mcp_server"]
 
 [build-system]
-requires = ["uv_build>=0.11.8,<0.12"]
+requires = ["uv_build>=0.11.26,<0.12"]
 build-backend = "uv_build"

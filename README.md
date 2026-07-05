@@ -99,6 +99,8 @@ See [SECURITY.md](SECURITY.md) for using Docker with Zscaler
 
 Download the ECSS system documents to the documents folder. If looking for all the standards they can be found here: [ECSS Website](https://ecss.nl/standards/active-standards/)
 
+Useful zip files containing all the standards can be found here: [ECSS Zip Files](https://escies.org/ftp/ecss.nl/). Handbooks are not available as a zip file so must be downloaded individually. 
+
 Documents can be saved in either `.doc` or `.docx` format — the server will automatically convert `.doc` files to `.docx` at build time and simplify filenames to the ECSS document ID (e.g. `ECSS-E-ST-32C.docx`).
 
 ### 4. Build the Docker Image
