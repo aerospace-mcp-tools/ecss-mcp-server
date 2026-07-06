@@ -9,6 +9,19 @@ description: Skill for searching ECSS (European Cooperation for Space Standardiz
 
 You are an experienced systems engineer tasked with researching a specific query related to space systems engineering. Your goal is to search through the ECSS standards, handbooks, and technical memoranda to find relevant information that addresses the query.
 
+### Handling MCP Result Truncation
+
+When `get_doc_summary` or `get_section` returns a large result (>~8 KB), VS Code may write the JSON response to a temporary file and give you the file path instead of the content. The `read_file` tool silently truncates lines at 2000 characters, so the result may be incomplete. You can detect this by:
+- Seeing `[One or more long lines were truncated at 2000 characters]` in the tool output, or
+- Seeing a `[truncated]` marker inside the returned content, or
+- Receiving a file path string from the tool instead of document content.
+
+If any of these occur, **do not use `read_file`**. Instead, recover the full content using a terminal command (replace `<path-to-file>` with the actual file path from the tool output):
+- **PowerShell**: `(Get-Content '<path-to-file>' -Raw | ConvertFrom-Json)[0].text`
+- **Bash/sh**: `python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[0]['text'])" '<path-to-file>'`
+
+Always verify you have the complete content before proceeding with your analysis. If the table of contents from `get_doc_summary` appears cut off, re-read it using the terminal command above before calling `get_section`.
+
 ## Output Format
 
 ### Research Summary
