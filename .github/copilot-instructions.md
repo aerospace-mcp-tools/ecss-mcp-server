@@ -52,5 +52,5 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for full dev setup details.
 - `libreoffice` is installed in the Dockerfile for `.doc` → `.docx` conversion; do not remove it.
 - After rebuilding the image, **restart VS Code** to reload the MCP client.
 - **MCP result truncation**: When an MCP tool returns more than ~8 KB, VS Code writes the raw JSON response to a temporary file and passes the file path to the agent instead of the content. The `read_file` tool has a 2000-character per-line limit and will silently truncate the result — indicated by `[One or more long lines were truncated at 2000 characters]` or a `[truncated]` marker appearing in the tool output. If this happens, **do not use `read_file`**; instead recover the full content using a terminal command (replace `<path-to-file>` with the actual file path from the tool output):
-  - **PowerShell**: `(Get-Content '<path-to-file>' -Raw | ConvertFrom-Json)[0].text`
-  - **Bash/sh**: `python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[0]['text'])" '<path-to-file>'`
+  - **PowerShell**: `(Get-Content '<path-to-file>' -Raw | ConvertFrom-Json).result`
+  - **Bash/sh**: `python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d['result'])" '<path-to-file>'`

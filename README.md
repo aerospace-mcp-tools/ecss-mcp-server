@@ -15,6 +15,7 @@ This MCP server is built with [FastMCP](https://gofastmcp.com) and containerized
 
 - **Document Lookup**: Retrieve a list of all ECSS document IDs available in the document library, along with their scope and full table of contents.
 - **Agentic Search**: Extract text from specific sections of any ECSS document by section number and heading, enabling LLMs to navigate and query standards content iteratively.
+- **Skill Integration**: searching-ecss skill available to improve query results.
 
 ## Tools
 
@@ -29,7 +30,7 @@ Get a list of all document IDs available in the document library.
 **Example usage in Copilot Chat:**
 
 ```text
-What ECSS documents are available in the ecss-mcp-server?
+/searching-ecss What ECSS documents are available in the ecss-mcp-server?
 ```
 
 ### 2. `get_doc_summary`
@@ -47,7 +48,7 @@ Get a summary of a document including its scope and table of contents.
 **Example usage in Copilot Chat:**
 
 ```text
-Give me a summary of ECSS-E-ST-32 using the ecss-mcp-server.
+/searching-ecss Give me a summary of ECSS-E-ST-32 using the ecss-mcp-server.
 ```
 
 ### 3. `get_section`
@@ -67,7 +68,7 @@ Extract the full text and tables of a specific section from a document.
 **Example usage in Copilot Chat:**
 
 ```text
-Get the requirements from section 5.3 of ECSS-E-ST-32 using the ecss-mcp-server.
+/searching-ecss Get the requirements from section 4.2 of ECSS-E-ST-32 using the ecss-mcp-server.
 ```
 
 ## Prerequisites
@@ -134,6 +135,10 @@ Stop the test container and clean up:
 docker stop test
 docker rm test
 ```
+
+### 6. Configure Skills
+
+If required, copy the searching-ecss skill to your working repository to improve query results.
 
 ## VS Code Integration
 
